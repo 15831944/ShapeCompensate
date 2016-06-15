@@ -1304,9 +1304,9 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 		*GCodeArryPtrDes = *GCodeArryPtrSrc;
 		return;
 	}
-	GCodeArryPtrDes = GfileFloatKerf.begin();
 	GCodeArryPtrSrc = GfileFloatNoKerf.begin();
-	*GCodeArryPtrDes = *GCodeArryPtrSrc;
+  GfileFloatKerf.push_back(*GCodeArryPtrSrc);
+  GCodeArryPtrDes = GfileFloatKerf.begin();
 	while(GCodeArryPtrSrc->Name !=M02)
 	{
 		
@@ -1328,8 +1328,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 	       if(GTemp1.Name!=M02)
 	       {
 	       	Setupkerf(&GTemp1, &deltax, &deltay, kerf, LastGName);
-					GCodeArryPtrDes++;
-					*GCodeArryPtrDes = *GCodeArryPtrSrc;
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *GCodeArryPtrSrc;
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = G00;  //增加一段空走线
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1357,8 +1359,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				}while(GTemp1.ShowLine>1&&GTemp1.Name!=G01  &&GTemp1.Name!=G02 && GTemp1.Name!=G03);
 
 				Canclekerf(&GTemp1, &deltax, &deltay, kerf, LastGName);
-				GCodeArryPtrDes++;
-				*GCodeArryPtrDes = *GCodeArryPtrSrc;
+			  //GCodeArryPtrDes++;
+			  //*GCodeArryPtrDes = *GCodeArryPtrSrc;
+        GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+        GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 				GCodeArryPtrDes->Name = G00;  //增加一段空走线
 				GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 				GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1385,8 +1389,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				}
 				
 				GetAddKerfGCode(*GCodeArryPtrSrc, &GTemp1, kerf,LastGName);
-				GCodeArryPtrDes++;
-				*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+				//GCodeArryPtrDes++;
+				//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+        GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
+	      GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 				GCodeArryPtrDes->Name = G01;
 				GCodeArryPtrDes->X0 = GTemp1.X0;
 				GCodeArryPtrDes->Y0 = GTemp1.Y0;
@@ -1414,8 +1420,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 						{
 							GCodeArryPtrDes->X = deltax;
 							GCodeArryPtrDes->Y = deltay;
-							GCodeArryPtrDes++;
-							*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+							//GCodeArryPtrDes++;
+							//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+              GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+              GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->Name = G01;
 							GCodeArryPtrDes->X0 = deltax;
 							GCodeArryPtrDes->Y0 = deltay;
@@ -1425,8 +1433,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 						}
 						else if(res==0)
 						{
-							GCodeArryPtrDes++;
-							*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+							//GCodeArryPtrDes++;
+							//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+              GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+              GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->Name = G01;
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1522,8 +1532,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 								}
 							}*/
 							
-							GCodeArryPtrDes++;
-							*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+							//GCodeArryPtrDes++;
+							//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+              GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+              GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->Name = G01;
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1540,15 +1552,19 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 						res = LineCircleIntersect(GTemp2.X0, GTemp2.Y0, GTemp2.X, GTemp2.Y, GCodeArryPtrDes->I, GCodeArryPtrDes->J, GetRadius(*GCodeArryPtrDes), &deltax, &deltay, &point2x,&point2y);
 						if(res==0) //直线与圆没有交点，则插入小直线
 						{
-							GCodeArryPtrDes++;
-							*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+							//GCodeArryPtrDes++;
+							//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+              GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
+              GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->Name = G01;
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 							GCodeArryPtrDes->X = GTemp2.X0;
 							GCodeArryPtrDes->Y = GTemp2.Y0;
-							GCodeArryPtrDes++;
-							*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+							//GCodeArryPtrDes++;
+							//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+              GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+              GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->Name = G01;
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1565,8 +1581,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							{
 								GCodeArryPtrDes->X = deltax;
 								GCodeArryPtrDes->Y = deltay;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = G01;
 								GCodeArryPtrDes->X0 = deltax;
 								GCodeArryPtrDes->Y0 = deltay;
@@ -1576,15 +1594,19 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							}
 							else
 							{
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+                GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = G01;
 								GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 								GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 								GCodeArryPtrDes->X = GTemp2.X0;
 								GCodeArryPtrDes->Y = GTemp2.Y0;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = G01;
 								GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 								GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1603,8 +1625,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							{
 								GCodeArryPtrDes->X = point2x;
 								GCodeArryPtrDes->Y = point2y;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = G01;
 								GCodeArryPtrDes->X0 = point2x;
 								GCodeArryPtrDes->Y0 = point2y;
@@ -1655,8 +1679,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 								{
 									GCodeArryPtrDes->X = deltax;
 									GCodeArryPtrDes->Y = deltay;
-									GCodeArryPtrDes++;
-									*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+									//GCodeArryPtrDes++;
+									//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                  GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                  GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 									GCodeArryPtrDes->Name = G01;
 									GCodeArryPtrDes->X0 = deltax;
 									GCodeArryPtrDes->Y0 = deltay;
@@ -1668,8 +1694,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 								{
 									GCodeArryPtrDes->X = point2x;
 									GCodeArryPtrDes->Y = point2y;
-									GCodeArryPtrDes++;
-									*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+									//GCodeArryPtrDes++;
+									//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                  GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                  GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 									GCodeArryPtrDes->Name = G01;
 									GCodeArryPtrDes->X0 = point2x;
 									GCodeArryPtrDes->Y0 = point2y;
@@ -1690,16 +1718,21 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				}
 				else if(GTemp1.Name==G01) //前面一行和当前行需要插入一条小直线 
 				{
-					GCodeArryPtrDes++;
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = G01;  //插入小直线
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X0;
 					GCodeArryPtrDes->Y = GTemp2.Y0;
-								
-					GCodeArryPtrDes++;    //确定下一条线的起点
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+
+          //确定下一条线的起点								
+					//GCodeArryPtrDes++;    
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = G01;  //插入小直线
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1709,8 +1742,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				}
 				else if(GTemp1.Name==G02)
 				{
-					GCodeArryPtrDes++;
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					if(sqrt(pow((GCodeArryPtrDes-1)->X-GTemp2.X0,2)+pow((GCodeArryPtrDes-1)->Y-GTemp2.Y0,2))<0.2)
 					GCodeArryPtrDes->Name = G01;
 					else
@@ -1722,9 +1757,11 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					GCodeArryPtrDes->I =GCodeArryPtrSrc->X0;
 					GCodeArryPtrDes->J =GCodeArryPtrSrc->Y0;
 
-								
-					GCodeArryPtrDes++;    //确定下一条线的起点
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+					//确定下一条线的起点			
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = G01;  //插入小直线
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1735,8 +1772,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				}
 				else if(GTemp1.Name==G03)
 				{
-					GCodeArryPtrDes++;
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					if(sqrt(pow((GCodeArryPtrDes-1)->X-GTemp2.X0,2)+pow((GCodeArryPtrDes-1)->Y-GTemp2.Y0,2))<0.2)
 					GCodeArryPtrDes->Name = G01;
 					else
@@ -1749,9 +1788,11 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					GCodeArryPtrDes->J =GCodeArryPtrSrc->Y0;
 	
 								
-								
-					GCodeArryPtrDes++;    //确定下一条线的起点
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+					//确定下一条线的起点			
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = G01;  //插入小直线
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1762,8 +1803,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				}
 				else if(GTemp1.Name==M00) //前面一行和当前行平等相接，不需要插入或截取
 				{
-					GCodeArryPtrDes++;
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X;
@@ -1775,12 +1818,14 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 			}
 			else
 			{
-				GCodeArryPtrDes++;
-				*GCodeArryPtrDes = *GCodeArryPtrSrc;
+				//GCodeArryPtrDes++;
+				//*GCodeArryPtrDes = *GCodeArryPtrSrc;
+        GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+        GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 				GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 				GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 				GCodeArryPtrDes->X = (GCodeArryPtrDes)->X0+GCodeArryPtrSrc->X - GCodeArryPtrSrc->X0;
-				GCodeArryPtrDes->Y = (GCodeArryPtrDes)->Y0+GCodeArryPtrSrc->Y- GCodeArryPtrSrc->Y0;
+				GCodeArryPtrDes->Y = (GCodeArryPtrDes)->Y0+GCodeArryPtrSrc->Y - GCodeArryPtrSrc->Y0;
 				
 			}
 		}
@@ -1825,8 +1870,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				}
 				
 				GetAddKerfGCode(*GCodeArryPtrSrc, &GTemp1, kerf,LastGName);
-				GCodeArryPtrDes++;
-				*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+				//GCodeArryPtrDes++;
+				//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+        GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
+        GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 				GCodeArryPtrDes->Name = GCodeArryPtrSrc->Name;
 				GCodeArryPtrDes->X0 = GTemp1.X0;
 				GCodeArryPtrDes->Y0 = GTemp1.Y0;
@@ -1852,22 +1899,26 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					GetAddKerfGCode(*GCodeArryPtrSrc, &GTemp2, kerf,G41);
 				}
 				if(GTemp1.Name==M02)  //前面一行和当前行需要截取
-				{
+        {
 					if((GCodeArryPtrSrc-1)->Name==G01)
 					{
 						res = LineCircleIntersect(GCodeArryPtrDes->X0 ,GCodeArryPtrDes->Y0 ,GCodeArryPtrDes->X,GCodeArryPtrDes->Y, GTemp2.I, GTemp2.J, GetRadius(GTemp2), &deltax, &deltay, &point2x,&point2y);
 						if(res==0)
 						{
-							GCodeArryPtrDes++;
-							*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+							//GCodeArryPtrDes++;
+							//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+              GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+              GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->Name = G01;  //没有相交则插入小直线
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 							GCodeArryPtrDes->X = GTemp2.X0;
 							GCodeArryPtrDes->Y = GTemp2.Y0;
 
-							GCodeArryPtrDes++;
-							*GCodeArryPtrDes = GTemp2;  //当前行
+							//GCodeArryPtrDes++;
+							//*GCodeArryPtrDes = GTemp2;  //当前行
+              GfileFloatKerf.push_back(GTemp2); // Add by ZhanShi
+              GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 							GCodeArryPtrDes->X = GTemp2.X;
@@ -1877,6 +1928,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							
 								
 							//Assert("res=0,line and circle") ;
+              //_sleep(20);
 							//assert(0);
 
 								
@@ -1887,8 +1939,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							{
 								GCodeArryPtrDes->X = deltax;
 								GCodeArryPtrDes->Y = deltay;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = LastGName;
 								GCodeArryPtrDes->X0 = deltax;
 								GCodeArryPtrDes->Y0 = deltay;
@@ -1902,16 +1956,20 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							}
 							else
 							{
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = G01;  //没有相交则插入小直线
 								GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 								GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 								GCodeArryPtrDes->X = GTemp2.X0;
 								GCodeArryPtrDes->Y = GTemp2.Y0;
 	
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = GTemp2;  //当前行
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = GTemp2;  //当前行
+                GfileFloatKerf.push_back(GTemp2); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 								GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 								GCodeArryPtrDes->X = GTemp2.X;
@@ -1932,8 +1990,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							{
 								GCodeArryPtrDes->X = point2x;
 								GCodeArryPtrDes->Y = point2y;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = LastGName;
 								GCodeArryPtrDes->X0 = point2x;
 								GCodeArryPtrDes->Y0 = point2y;
@@ -1947,8 +2007,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							{
 								GCodeArryPtrDes->X = deltax;
 								GCodeArryPtrDes->Y = deltay;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = LastGName;
 								GCodeArryPtrDes->X0 = deltax;
 								GCodeArryPtrDes->Y0 = deltay;
@@ -1967,17 +2029,21 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 						if(res==1 || res == 5) //相离 或 相含
 						{
 							//增加小直线
-							GCodeArryPtrDes++;
-							*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+							//GCodeArryPtrDes++;
+							//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
+              GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
+              GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->Name = G01;  //插入小圆弧
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 							GCodeArryPtrDes->X = GTemp2.X0;
 							GCodeArryPtrDes->Y = GTemp2.Y0;
 	
-								
-							GCodeArryPtrDes++;    //确定下一条线的起点
-							*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+							//确定下一条线的起点	
+							//GCodeArryPtrDes++;
+							//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+              GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+              GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->Name = LastGName;  //抄过当前圆弧
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -1997,8 +2063,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							{
 								GCodeArryPtrDes->X = deltax;
 								GCodeArryPtrDes->Y = deltay;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = LastGName;
 								GCodeArryPtrDes->X0 = deltax;
 								GCodeArryPtrDes->Y0 = deltay;
@@ -2012,8 +2080,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							{
 								GCodeArryPtrDes->X = point2x;
 								GCodeArryPtrDes->Y = point2y;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = LastGName;
 								GCodeArryPtrDes->X0 = deltax;
 								GCodeArryPtrDes->Y0 = deltay;
@@ -2032,8 +2102,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							{
 								GCodeArryPtrDes->X = deltax;
 								GCodeArryPtrDes->Y = deltay;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = LastGName;
 								GCodeArryPtrDes->X0 = deltax;
 								GCodeArryPtrDes->Y0 = deltay;
@@ -2047,8 +2119,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 							{
 								GCodeArryPtrDes->X = point2x;
 								GCodeArryPtrDes->Y = point2y;
-								GCodeArryPtrDes++;
-								*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+								//GCodeArryPtrDes++;
+								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+                GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+                GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->Name = LastGName;
 								GCodeArryPtrDes->X0 = point2x;
 								GCodeArryPtrDes->Y0 = point2y;
@@ -2063,18 +2137,22 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					}
 				}
 				else if(GTemp1.Name==G01) //前面一行和当前行需要插入一条小直线 
-				{
-					GCodeArryPtrDes++;
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+        {
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = G01;  //插入小直线
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X0;
 					GCodeArryPtrDes->Y = GTemp2.Y0;
 
-								
-					GCodeArryPtrDes++;    //确定下一条线的起点
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+					//确定下一条线的起点			
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = LastGName;  //插入当前G02 或G03
 					GCodeArryPtrDes->X0 = GTemp2.X0;
 					GCodeArryPtrDes->Y0 = GTemp2.Y0;
@@ -2086,9 +2164,11 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					
 				}
 				else if(GTemp1.Name==G02)
-				{
-					GCodeArryPtrDes++;
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+        {
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = G02;  //插入小圆弧
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -2098,9 +2178,11 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					GCodeArryPtrDes->J =GCodeArryPtrSrc->Y0;
 	
 								
-					
-					GCodeArryPtrDes++;    //确定下一条线的起点
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+					//确定下一条线的起点
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = LastGName;  //插入当前G02或G03
 					GCodeArryPtrDes->X0 = GTemp2.X0;
 					GCodeArryPtrDes->Y0 = GTemp2.Y0;
@@ -2112,9 +2194,11 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 								
 				}
 				else if(GTemp1.Name==G03)
-				{
-					GCodeArryPtrDes++;
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+        {
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = G03;  //插入小圆弧
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
@@ -2124,9 +2208,11 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					GCodeArryPtrDes->J =GCodeArryPtrSrc->Y0;
 
 								
-					
-					GCodeArryPtrDes++;    //确定下一条线的起点
-					*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+					//确定下一条线的起点
+					//GCodeArryPtrDes++;
+					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+          GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 					GCodeArryPtrDes->Name = LastGName;  //插入当前G02或G03
 					GCodeArryPtrDes->X0 = GTemp2.X0;
 					GCodeArryPtrDes->Y0 = GTemp2.Y0;
@@ -2138,21 +2224,24 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 								
 				}
 				else if(GTemp1.Name==M00) //前面一行和当前行平等相接，不需要插入或截取
-				{
-					GCodeArryPtrDes++;
-					if(fabs((GCodeArryPtrDes-1)->X-GTemp2.X0)>0.1||
-					fabs((GCodeArryPtrDes-1)->Y-GTemp2.Y0)>0.1)
+        {
+					if (fabs((GCodeArryPtrDes)->X-GTemp2.X0)>0.1||
+					    fabs((GCodeArryPtrDes)->Y-GTemp2.Y0)>0.1)
 					{
 						//需要插入直线
+            GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+            GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 						GCodeArryPtrDes->Name = G01;  
 						GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 						GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 						GCodeArryPtrDes->X = GTemp2.X0;
 						GCodeArryPtrDes->Y = GTemp2.Y0;
-						GCodeArryPtrDes++;
 						
-						//再把当前圆弧加入进来	
-						*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+						//再把当前圆弧加入进来
+            //GCodeArryPtrDes++;
+						//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+            GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+	          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 						GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 						GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 						GCodeArryPtrDes->X = GTemp2.X;
@@ -2164,7 +2253,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					}
 					else
 					{
-						*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+            //GCodeArryPtrDes++;
+						//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+            GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+	          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 						GCodeArryPtrDes->X0 = GTemp2.X0;//不取上一行的末点坐标，是因为有时起点坐标偏一点就会导致一个整圆变成小圆弧
 						GCodeArryPtrDes->Y0 = GTemp2.Y0;
 						GCodeArryPtrDes->X = GTemp2.X;
@@ -2177,8 +2269,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 			}
 			else
 			{
-				GCodeArryPtrDes++;
-				*GCodeArryPtrDes = *GCodeArryPtrSrc;
+				//GCodeArryPtrDes++;
+				//*GCodeArryPtrDes = *GCodeArryPtrSrc;
+        GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+	      GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 				GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 				GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 				GCodeArryPtrDes->X = GCodeArryPtrDes->X0+(GCodeArryPtrSrc->X-GCodeArryPtrSrc->X0);
@@ -2197,8 +2291,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 			}
 			else
 			{
-				GCodeArryPtrDes++;
-				*GCodeArryPtrDes = *GCodeArryPtrSrc;
+				//GCodeArryPtrDes++;
+				//*GCodeArryPtrDes = *GCodeArryPtrSrc;
+        GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+        GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 				GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 				GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 				GCodeArryPtrDes->X = GCodeArryPtrDes->X0+(GCodeArryPtrSrc->X-GCodeArryPtrSrc->X0);
@@ -2215,7 +2311,8 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
     }
 		GCodeArryPtrSrc++;
 	}
-	GCodeArryPtrDes++;
+  GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
+	GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 	GCodeArryPtrDes->Name = M02;
 }
 
@@ -2240,6 +2337,7 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
   GfileFloatNoKerf.clear();
   double start_X = 0.;
   double start_Y = 0.;
+  bool is_absolute = false;
   for (size_t i = 0; i < code_lines.size(); i++) {
     GCodeARRAY_STRUCT code_array;
     std::string code_type = code_lines[i].substr(0, 3);
@@ -2315,8 +2413,10 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
       code_array.Name = G21;
     } else if (code_type.compare("G90") == 0) {
       code_array.Name = G90;
+      is_absolute = true;
     } else if (code_type.compare("G91") == 0) {
       code_array.Name = G91;
+      is_absolute = false;
     } else if (code_type.compare("G99") == 0) {
       code_array.Name = G99;
       code_array.ScaleFactor = GetCodeValue(code_lines[i], "X");
@@ -2344,6 +2444,7 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
     GfileFloatNoKerf.push_back(code_array);
   }
 
+  GfileFloatKerf.clear();
   g2kerf(GfileFloatKerf, GfileFloatNoKerf);
 }
 
@@ -2382,84 +2483,84 @@ void Kerf::GenerateKerfGCode(std::vector<std::string> &code_lines) {
 }
 
 std::string Kerf::TransformGCodeLine(const GCodeARRAY_STRUCT &gcode_array) {
-  std::string gcode_line;
+  char GCODE[100];
   switch (gcode_array.Name) {
    case G00:
-    printf(gcode_line.c_str(), "G00 X%.3lf Y%.3lf",
+    sprintf(GCODE, "G00 X%.3lf Y%.3lf",
         gcode_array.X, gcode_array.Y);
 
     break;
    case G01:
-    printf(gcode_line.c_str(), "G01 X%.3lf Y%.3lf F%.3lf",
+    sprintf(GCODE, "G01 X%.3lf Y%.3lf F%.3lf",
         gcode_array.X, gcode_array.Y, gcode_array.F);
 
     break;
    case G02:
-    printf(gcode_line.c_str(), "G02 X%.3lf Y%.3lf I%.3lf J%.3lf F%.3lf",
+    sprintf(GCODE, "G02 X%.3lf Y%.3lf I%.3lf J%.3lf F%.3lf",
         gcode_array.X, gcode_array.Y, gcode_array.I, gcode_array.J, gcode_array.F);
 
     break;
    case G03:
-    printf(gcode_line.c_str(), "G03 X%.3lf Y%.3lf I%.3lf J%.3lf F%.3lf",
+    sprintf(GCODE, "G03 X%.3lf Y%.3lf I%.3lf J%.3lf F%.3lf",
         gcode_array.X, gcode_array.Y, gcode_array.I, gcode_array.J, gcode_array.F);
 
     break;
    case G04:
-    printf(gcode_line.c_str(), "G04 F%.3lf", gcode_array.Delay);
+    sprintf(GCODE, "G04 F%.3lf", gcode_array.Delay);
     break;
    case G40:
-    printf(gcode_line.c_str(), "G40");
+    sprintf(GCODE, "G40");
     break;
    case G41:
-    printf(gcode_line.c_str(), "G41");
+    sprintf(GCODE, "G41");
     break;
    case G42:
-    printf(gcode_line.c_str(), "G42");
+    sprintf(GCODE, "G42");
     break;
    case G20:
-    printf(gcode_line.c_str(), "G20");
+    sprintf(GCODE, "G20");
     break;
    case G21:
-    printf(gcode_line.c_str(), "G21");
+    sprintf(GCODE, "G21");
     break;
    case G90:
-    printf(gcode_line.c_str(), "G90");
+    sprintf(GCODE, "G90");
     break;
    case G91:
-    printf(gcode_line.c_str(), "G91");
+    sprintf(GCODE, "G91");
     break;
    case G99:
-    printf(gcode_line.c_str(), "G99 X%.3lf Y%.3lf I%.3lf J%.3lf",
+    sprintf(GCODE, "G99 X%.3lf Y%.3lf I%.3lf J%.3lf",
         gcode_array.ScaleFactor, gcode_array.RotateAngle,
         gcode_array.HorizonMirror, gcode_array.VerticalMirror);
 
     break;
    case M00:
-    printf(gcode_line.c_str(), "M00");
+    sprintf(GCODE, "M00");
     break;
    case M02:
-    printf(gcode_line.c_str(), "M02");
+    sprintf(GCODE, "M02");
     break;
    case M07:
-    printf(gcode_line.c_str(), "M07");
+    sprintf(GCODE, "M07");
     break;
    case M08:
-    printf(gcode_line.c_str(), "M08");
+    sprintf(GCODE, "M08");
     break;
    case M09:
-    printf(gcode_line.c_str(), "M09");
+    sprintf(GCODE, "M09");
     break;
    case M10:
-    printf(gcode_line.c_str(), "M10");
+    sprintf(GCODE, "M10");
     break;
    case M11:
-    printf(gcode_line.c_str(), "M11");
+    sprintf(GCODE, "M11");
     break;
    case M12:
-    printf(gcode_line.c_str(), "M12");
+    sprintf(GCODE, "M12");
     break;
    default:
     break;
   }
-  return gcode_line;
+  return std::string(GCODE);
 }
