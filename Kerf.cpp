@@ -757,7 +757,7 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 
 }
 
-Kerf::Kerf(): kerf(0.) {}
+Kerf::Kerf(): kerf(0.), is_absolute(false) {}
 
 Kerf::~Kerf() {
 }
@@ -1270,7 +1270,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 	double x0,y0,x1,y1,cx,cy;
 	int res,i;
 	unsigned short LastGName,LastKerf=0,RowNum=0;
-	kerf = 10;
+	kerf = 5;
 	if(graphylimitxy.MaxRadius>50000)//°ë¾¶´óÓÚ50000£¬Ô²»¡²ð·Ö
 	{
 		CircleCheFen(GfileFloatNoKerf);
@@ -1353,10 +1353,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				else
 					LastGName = G42;
 				i=0;
-				do{
+				do {
 					GTemp1 = *(GCodeArryPtrDes-i);
 					i++;
-				}while(GTemp1.ShowLine>1&&GTemp1.Name!=G01  &&GTemp1.Name!=G02 && GTemp1.Name!=G03);
+				} while (GTemp1.ShowLine>1 && GTemp1.Name!=G01  && GTemp1.Name!=G02 && GTemp1.Name!=G03);
 
 				Canclekerf(&GTemp1, &deltax, &deltay, kerf, LastGName);
 			  //GCodeArryPtrDes++;
@@ -2335,16 +2335,20 @@ bool Kerf::ReadGCode(const std::string &file_name, std::vector<std::string> &cod
 // assume that is an absolute g code.
 void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
   GfileFloatNoKerf.clear();
+
   double start_X = 0.;
   double start_Y = 0.;
-  bool is_absolute = false;
+
   for (size_t i = 0; i < code_lines.size(); i++) {
     GCodeARRAY_STRUCT code_array;
+    code_array.X0 = code_array.X = start_X;
+    code_array.Y0 = code_array.Y = start_Y;
+
     std::string code_type = code_lines[i].substr(0, 3);
     if (code_type.compare("G00") == 0) {
       code_array.Name = G00;
-      code_array.X = GetCodeValue(code_lines[i], "X");
-      code_array.Y = GetCodeValue(code_lines[i], "Y");
+      code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
+      code_array.Y = is_absolute ? GetCodeValue(code_lines[i], "Y") : start_Y + GetCodeValue(code_lines[i], "Y");
 
       code_array.X0 = start_X;
       code_array.Y0 = start_Y;
@@ -2356,8 +2360,8 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
 
     } else if (code_type.compare("G01") == 0) {
       code_array.Name = G01;
-      code_array.X = GetCodeValue(code_lines[i], "X");
-      code_array.Y = GetCodeValue(code_lines[i], "Y");
+      code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
+      code_array.Y = is_absolute ? GetCodeValue(code_lines[i], "Y") : start_Y + GetCodeValue(code_lines[i], "Y");
       code_array.F = GetCodeValue(code_lines[i], "F");
 
       code_array.X0 = start_X;
@@ -2370,10 +2374,10 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
 
     } else if (code_type.compare("G02") == 0) {
       code_array.Name = G02;
-      code_array.X = GetCodeValue(code_lines[i], "X");
-      code_array.Y = GetCodeValue(code_lines[i], "Y");
-      code_array.I = GetCodeValue(code_lines[i], "I");
-      code_array.J = GetCodeValue(code_lines[i], "J");
+      code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
+      code_array.Y = is_absolute ? GetCodeValue(code_lines[i], "Y") : start_Y + GetCodeValue(code_lines[i], "Y");
+      code_array.I = is_absolute ? GetCodeValue(code_lines[i], "I") : start_X + GetCodeValue(code_lines[i], "I");
+      code_array.J = is_absolute ? GetCodeValue(code_lines[i], "J") : start_Y + GetCodeValue(code_lines[i], "J");
       code_array.F = GetCodeValue(code_lines[i], "F");
 
       code_array.X0 = start_X;
@@ -2385,10 +2389,10 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
       code_array.Length = 2 * code_array.R;
     } else if (code_type.compare("G03") == 0) {
       code_array.Name = G03;
-      code_array.X = GetCodeValue(code_lines[i], "X");
-      code_array.Y = GetCodeValue(code_lines[i], "Y");
-      code_array.I = GetCodeValue(code_lines[i], "I");
-      code_array.J = GetCodeValue(code_lines[i], "J");
+      code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
+      code_array.Y = is_absolute ? GetCodeValue(code_lines[i], "Y") : start_Y + GetCodeValue(code_lines[i], "Y");
+      code_array.I = is_absolute ? GetCodeValue(code_lines[i], "I") : start_X + GetCodeValue(code_lines[i], "I");
+      code_array.J = is_absolute ? GetCodeValue(code_lines[i], "J") : start_Y + GetCodeValue(code_lines[i], "J");
       code_array.F = GetCodeValue(code_lines[i], "F");
 
       code_array.X0 = start_X;
@@ -2487,22 +2491,33 @@ std::string Kerf::TransformGCodeLine(const GCodeARRAY_STRUCT &gcode_array) {
   switch (gcode_array.Name) {
    case G00:
     sprintf(GCODE, "G00 X%.3lf Y%.3lf",
-        gcode_array.X, gcode_array.Y);
+        is_absolute ? gcode_array.X : gcode_array.X - gcode_array.X0,
+        is_absolute ? gcode_array.Y : gcode_array.Y - gcode_array.Y0);
 
     break;
    case G01:
     sprintf(GCODE, "G01 X%.3lf Y%.3lf F%.3lf",
-        gcode_array.X, gcode_array.Y, gcode_array.F);
+        is_absolute ? gcode_array.X : gcode_array.X - gcode_array.X0,
+        is_absolute ? gcode_array.Y : gcode_array.Y - gcode_array.Y0,
+        gcode_array.F);
 
     break;
    case G02:
     sprintf(GCODE, "G02 X%.3lf Y%.3lf I%.3lf J%.3lf F%.3lf",
-        gcode_array.X, gcode_array.Y, gcode_array.I, gcode_array.J, gcode_array.F);
+        is_absolute ? gcode_array.X : gcode_array.X - gcode_array.X0,
+        is_absolute ? gcode_array.Y : gcode_array.Y - gcode_array.Y0,
+        is_absolute ? gcode_array.I : gcode_array.I - gcode_array.X0,
+        is_absolute ? gcode_array.J : gcode_array.J - gcode_array.Y0,
+        gcode_array.F);
 
     break;
    case G03:
     sprintf(GCODE, "G03 X%.3lf Y%.3lf I%.3lf J%.3lf F%.3lf",
-        gcode_array.X, gcode_array.Y, gcode_array.I, gcode_array.J, gcode_array.F);
+        is_absolute ? gcode_array.X : gcode_array.X - gcode_array.X0,
+        is_absolute ? gcode_array.Y : gcode_array.Y - gcode_array.Y0,
+        is_absolute ? gcode_array.I : gcode_array.I - gcode_array.X0,
+        is_absolute ? gcode_array.J : gcode_array.J - gcode_array.Y0,
+        gcode_array.F);
 
     break;
    case G04:
