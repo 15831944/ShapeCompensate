@@ -1270,7 +1270,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 	double x0,y0,x1,y1,cx,cy;
 	int res,i;
 	unsigned short LastGName,LastKerf=0,RowNum=0;
-	kerf = 5;
+	kerf = 0;
 	if(graphylimitxy.MaxRadius>50000)//°ë¾¶´óÓÚ50000£¬Ô²»¡²ð·Ö
 	{
 		CircleCheFen(GfileFloatNoKerf);
@@ -1298,10 +1298,10 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 	{
 		while(GCodeArryPtrSrc->Name!=M02)
     {   
-        *GCodeArryPtrDes++ = *GCodeArryPtrSrc++;
+        GfileFloatKerf.push_back(*GCodeArryPtrSrc++);
     }
 			
-		*GCodeArryPtrDes = *GCodeArryPtrSrc;
+		GfileFloatKerf.push_back(*GCodeArryPtrSrc);
 		return;
 	}
 	GCodeArryPtrSrc = GfileFloatNoKerf.begin();
