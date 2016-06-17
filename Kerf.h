@@ -9,6 +9,8 @@ class Kerf {
  public:
   Kerf();
   ~Kerf();
+  
+  void SetKerfValue(double kerf_value);
 
   bool ReadGCode(const std::string &file_name, std::vector<std::string> &code_lines);
   bool WriteGCode(const std::string &file_name, const std::vector<std::string> &contents);
@@ -19,8 +21,8 @@ class Kerf {
  private:
   bool is_absolute;
   double kerf;
-  std::vector<GCodeARRAY_STRUCT> GfileFloatKerf; // ÓĞ¸î·ìµÄ¸¡µãĞÍÇĞ¸î´úÂë
-  std::vector<GCodeARRAY_STRUCT> GfileFloatNoKerf; // Ã»ÓĞ¸î·ìµÄ¸¡µãĞÍÇĞ¸î´úÂë
+  std::vector<GCodeARRAY_STRUCT> GfileFloatKerf; // æœ‰å‰²ç¼çš„æµ®ç‚¹å‹åˆ‡å‰²ä»£ç 
+  std::vector<GCodeARRAY_STRUCT> GfileFloatNoKerf; // æ²¡æœ‰å‰²ç¼çš„æµ®ç‚¹å‹åˆ‡å‰²ä»£ç 
   GraphyLimit graphylimitxy;
 
   void CircleCheFen(std::vector<GCodeARRAY_STRUCT> &GCodeArry);
