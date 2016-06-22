@@ -2,6 +2,7 @@
 
 int main(int argc, char *argv[]) {
   Kerf kerf;
+  kerf.SetKerfValue(1.5);
   std::vector<std::string> lines;
   kerf.ReadGCode("d://MRT20GL19.TXT", lines);
 
