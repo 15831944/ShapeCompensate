@@ -1,3 +1,6 @@
+// Copyright 2016 Fangling Software Co., Ltd. All Rights Reserved.
+// Author: shizhan-shelly@hotmail.com (Zhan Shi)
+
 #ifndef SHAPECOMPENSATE_KERF_H__
 #define SHAPECOMPENSATE_KERF_H__
 
@@ -30,10 +33,10 @@ class Kerf {
   double GetRadius(GCodeARRAY_STRUCT &pG);
   double GetTangent(GCodeARRAY_STRUCT *pG, int StartOrEnd);
   int GetAddKerfGCode(GCodeARRAY_STRUCT &pNoKerfG,
-      GCodeARRAY_STRUCT *AddKerfGCode, double kerfvalue, int dir);
+      GCodeARRAY_STRUCT &AddKerfGCode, double kerfvalue, int dir);
 
   int AddOrTrunc(GCodeARRAY_STRUCT &pPreviousLine, GCodeARRAY_STRUCT &pNextLine,
-      GCodeARRAY_STRUCT *pAddLine, double kerfvalue, int dir);
+      GCodeARRAY_STRUCT &pAddLine, double kerfvalue, int dir);
 
   int Setupkerf(GCodeARRAY_STRUCT *pGcode, double *dx, double *dy,
       double kerfvlaue, int dir);

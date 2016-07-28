@@ -1,3 +1,6 @@
+// Copyright 2016 Fangling Software Co., Ltd. All Rights Reserved.
+// Author: shizhan-shelly@hotmail.com (Zhan Shi)
+
 #ifndef GCODESTRUCT_H__
 #define GCODESTRUCT_H__
 
