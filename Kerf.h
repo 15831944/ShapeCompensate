@@ -36,7 +36,7 @@ class Kerf {
       GCodeARRAY_STRUCT &AddKerfGCode, double kerfvalue, int dir);
 
   int AddOrTrunc(GCodeARRAY_STRUCT &pPreviousLine, GCodeARRAY_STRUCT &pNextLine,
-      GCodeARRAY_STRUCT &pAddLine, double kerfvalue, int dir);
+      GCodeARRAY_STRUCT &pAddLine, int dir);
 
   int Setupkerf(GCodeARRAY_STRUCT *pGcode, double *dx, double *dy,
       double kerfvlaue, int dir);
