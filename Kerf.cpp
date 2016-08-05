@@ -757,13 +757,13 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 
 }
 
-Kerf::Kerf(): kerf(0.), is_absolute(false) {}
+Kerf::Kerf(): param_kerf(0.), is_absolute(false) {}
 
 Kerf::~Kerf() {
 }
 
 void Kerf::SetKerfValue(double kerf_value) {
-  kerf = kerf_value;
+  param_kerf = kerf_value;
 }
 
 //GCodeARRAY_STRUCT GfileFloatTemp[GfileTotalRows];
@@ -1272,6 +1272,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 	double x0,y0,x1,y1,cx,cy;
 	int res,i;
 	unsigned short LastGName,LastKerf=0,RowNum=0;
+	double kerf = param_kerf;
 //	if(graphylimitxy.MaxRadius>50000)//半径大于50000，圆弧拆分
 //	{
 //		CircleCheFen(GfileFloatNoKerf);
@@ -1313,6 +1314,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 		
 		if(GCodeArryPtrSrc->Name==G41||GCodeArryPtrSrc->Name==G42 )
 		{
+			kerf = GCodeArryPtrSrc->KerfValue > 0 ? GCodeArryPtrSrc->KerfValue : param_kerf;
 			LastGName = GCodeArryPtrSrc->Name;
 			if(kerf_on!=SETTEDG41KERF&&kerf_on!=SETTEDG42KERF)
 			{
@@ -1328,7 +1330,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				
 	       if(GTemp1.Name!=M02)
 	       {
-          Setupkerf(&GTemp1, &deltax, &deltay, GTemp1.KerfValue, LastGName);
+          Setupkerf(&GTemp1, &deltax, &deltay, kerf, LastGName);
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *GCodeArryPtrSrc;
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
@@ -1359,7 +1361,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					i++;
 				} while (GTemp1.ShowLine>1 && GTemp1.Name!=G01  && GTemp1.Name!=G02 && GTemp1.Name!=G03);
 
-        Canclekerf(&GTemp1, &deltax, &deltay, GTemp1.KerfValue, LastGName);
+        Canclekerf(&GTemp1, &deltax, &deltay, kerf, LastGName);
 			  //GCodeArryPtrDes++;
 			  //*GCodeArryPtrDes = *GCodeArryPtrSrc;
         GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
@@ -1389,7 +1391,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					kerf_on = SETTEDG41KERF;
 				}
 				
-        GetAddKerfGCode(*GCodeArryPtrSrc, GTemp1, GCodeArryPtrSrc->KerfValue, LastGName);
+        GetAddKerfGCode(*GCodeArryPtrSrc, GTemp1, kerf, LastGName);
 				//GCodeArryPtrDes++;
 				//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
         GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
@@ -1405,12 +1407,12 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				if(kerf_on==SETTEDG42KERF)
 				{
 					AddOrTrunc(*(GCodeArryPtrSrc-1), *GCodeArryPtrSrc, GTemp1, G42);
-          GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, GCodeArryPtrSrc->KerfValue, G42);
+          GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, kerf, G42);
 				}
 				else
 				{
 					AddOrTrunc(*(GCodeArryPtrSrc-1), *GCodeArryPtrSrc, GTemp1, G41);
-					GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, GCodeArryPtrSrc->KerfValue, G41);
+					GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, kerf, G41);
 				}
 				if(GTemp1.Name==M02)  //前面一行和当前行需要截取
 				{
@@ -1870,7 +1872,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					kerf_on = SETTEDG41KERF;
 				}
 				
-        GetAddKerfGCode(*GCodeArryPtrSrc, GTemp1, GCodeArryPtrSrc->KerfValue, LastGName);
+        GetAddKerfGCode(*GCodeArryPtrSrc, GTemp1, kerf, LastGName);
 				//GCodeArryPtrDes++;
 				//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
         GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
@@ -1892,12 +1894,12 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				if(kerf_on==SETTEDG42KERF)
 				{
 					AddOrTrunc(*(GCodeArryPtrSrc-1), *GCodeArryPtrSrc, GTemp1, G42);
-          GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, GCodeArryPtrSrc->KerfValue, G42);
+          GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, kerf, G42);
 				}
 				else
 				{
 					AddOrTrunc(*(GCodeArryPtrSrc-1), *GCodeArryPtrSrc, GTemp1, G41);
-					GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, GCodeArryPtrSrc->KerfValue, G41);
+					GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, kerf, G41);
 				}
 				if(GTemp1.Name==M02)  //前面一行和当前行需要截取
         {
@@ -2340,13 +2342,8 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
   double start_X = 0.;
   double start_Y = 0.;
 
-  double default_kerf = kerf;
-  double special_kerf = 0;
-  double special_kerf_flag = false;
-
   for (size_t i = 0; i < code_lines.size(); i++) {
     GCodeARRAY_STRUCT code_array;
-    code_array.KerfValue = default_kerf;
     code_array.X0 = code_array.X = start_X;
     code_array.Y0 = code_array.Y = start_Y;
 
@@ -2378,7 +2375,6 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
       code_array.Length = sqrt(pow(code_array.X - code_array.X0, 2)
           + pow(code_array.Y - code_array.Y0, 2));
 
-      code_array.KerfValue = special_kerf_flag ? special_kerf : default_kerf;
     } else if (code_type.compare("G02") == 0) {
       code_array.Name = G02;
       code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
@@ -2394,7 +2390,6 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
 
       code_array.R = GetRadius(code_array);
       code_array.Length = 2 * code_array.R;
-      code_array.KerfValue = special_kerf_flag ? special_kerf : default_kerf;
     } else if (code_type.compare("G03") == 0) {
       code_array.Name = G03;
       code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
@@ -2410,18 +2405,14 @@ void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
 
       code_array.R = GetRadius(code_array);
       code_array.Length = 2 * code_array.R;
-      code_array.KerfValue = special_kerf_flag ? special_kerf : default_kerf;
     } else if (code_type.compare("G41") == 0) {
       code_array.Name = G41;
-      special_kerf = GetCodeValue(code_lines[i], "L");
-      special_kerf_flag = fabs(special_kerf) > 0;
+	  code_array.KerfValue = GetCodeValue(code_lines[i], "K");
     } else if (code_type.compare("G42") == 0) {
       code_array.Name = G42;
-      special_kerf = GetCodeValue(code_lines[i], "L");
-      special_kerf_flag = fabs(special_kerf) > 0;
+      code_array.KerfValue = GetCodeValue(code_lines[i], "K");
     } else if (code_type.compare("G40") == 0) {
       code_array.Name = G40;
-      special_kerf_flag = false;
     } else if (code_type.compare("G04") == 0) {
       code_array.Name = G04;
       code_array.Delay = GetCodeValue(code_lines[i], "F");

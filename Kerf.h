@@ -23,7 +23,7 @@ class Kerf {
 
  private:
   bool is_absolute;
-  double kerf;
+  double param_kerf;
   std::vector<GCodeARRAY_STRUCT> GfileFloatKerf; // 有割缝的浮点型切割代码
   std::vector<GCodeARRAY_STRUCT> GfileFloatNoKerf; // 没有割缝的浮点型切割代码
   GraphyLimit graphylimitxy;
