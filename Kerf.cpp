@@ -4,14 +4,11 @@
 #include "Kerf.h"
 
 #include <math.h>
-#include <stdlib.h>
 
-#include <fstream>
-#include <string>
+#include "GCodeParse.h"
 
-//double kerf = 0;
-//GCodeARRAY_STRUCT GfileFloatKerf[80000]; // 有割缝的浮点型切割代码
-//GCodeARRAY_STRUCT GfileFloatNoKerf[80000]; // 没有割缝的浮点型切割代码
+//GCodeStruct GfileFloatKerf[80000]; // 有割缝的浮点型切割代码
+//GCodeStruct GfileFloatNoKerf[80000]; // 没有割缝的浮点型切割代码
 //GraphyLimit graphylimitxy;
 
 const double INFINITESIMAL = 0.00001;//0.0000001;
@@ -757,22 +754,21 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 
 }
 
-Kerf::Kerf(): param_kerf(0.), is_absolute(false) {}
+Kerf::Kerf(): param_kerf(0.) {}
 
-Kerf::~Kerf() {
-}
+Kerf::~Kerf() {}
 
 void Kerf::SetKerfValue(double kerf_value) {
   param_kerf = kerf_value;
 }
 
-//GCodeARRAY_STRUCT GfileFloatTemp[GfileTotalRows];
-void Kerf::CircleCheFen(std::vector<GCodeARRAY_STRUCT> &GCodeArry)
+//GCodeStruct GfileFloatTemp[GfileTotalRows];
+void Kerf::CircleCheFen(std::vector<GCodeStruct> &GCodeArry)
 {
 	double StartAngle,EndAngle,StepAngle,CurrentAngle;
 	double d_t1,d_t2,d_t3,d_t4;
-  std::vector<GCodeARRAY_STRUCT>::iterator GCodeArryPtrSrc = GCodeArry.begin();
-	std::vector<GCodeARRAY_STRUCT>::iterator GCodeArryCheFen = GfileFloatKerf.begin();
+  std::vector<GCodeStruct>::iterator GCodeArryPtrSrc = GCodeArry.begin();
+	std::vector<GCodeStruct>::iterator GCodeArryCheFen = GfileFloatKerf.begin();
   //GfileFloatTemp;
 	
 	while(GCodeArryPtrSrc->Name!=M02)
@@ -917,9 +913,9 @@ void Kerf::CircleCheFen(std::vector<GCodeARRAY_STRUCT> &GCodeArry)
 	
 }
 
-int Kerf::IgnoreLittleLine(std::vector<GCodeARRAY_STRUCT> &GCodeArry) {
-	std::vector<GCodeARRAY_STRUCT>::iterator GCodeArryPtrSrc = GCodeArry.begin();
-	std::vector<GCodeARRAY_STRUCT>::iterator GCodeArryLittelLine = GfileFloatKerf.begin();
+int Kerf::IgnoreLittleLine(std::vector<GCodeStruct> &GCodeArry) {
+	std::vector<GCodeStruct>::iterator GCodeArryPtrSrc = GCodeArry.begin();
+	std::vector<GCodeStruct>::iterator GCodeArryLittelLine = GfileFloatKerf.begin();
   //GfileFloatTemp;
 
 	int res=0; 
@@ -984,7 +980,7 @@ int GetLineLineIntersect(Line_t *pPreviousLine,Line_t *pNextLine,point_t *pJoint
 	}
 	return res;
 }*/
-double Kerf::GetRadius(GCodeARRAY_STRUCT &pG)
+double Kerf::GetRadius(GCodeStruct &pG)
 {
 	return sqrt(pow(pG.X-pG.I,2)+pow(pG.Y-pG.J,2));
 }
@@ -993,26 +989,26 @@ double Kerf::GetRadius(GCodeARRAY_STRUCT &pG)
 	 0- startpoint
 	 1 -endpoint
 */
-double Kerf::GetTangent(GCodeARRAY_STRUCT *pG, int StartOrEnd)
+double Kerf::GetTangent(GCodeStruct &pG, int StartOrEnd)
 {
 	double Tangent;
-	if(pG->Name==G01)
+	if(pG.Name==G01)
 	{
-		Tangent = myatan2(pG->Y-pG->Y0, pG->X-pG->X0);
+		Tangent = myatan2(pG.Y-pG.Y0, pG.X-pG.X0);
 	}
-	else if(pG->Name==G02)
+	else if(pG.Name==G02)
 	{
 		if(StartOrEnd==0)
-			Tangent = myatan2(pG->Y0-pG->J, pG->X0-pG->I)-_1p2PI;
+			Tangent = myatan2(pG.Y0-pG.J, pG.X0-pG.I)-_1p2PI;
 		else
-			Tangent = myatan2(pG->Y-pG->J, pG->X-pG->I)-_1p2PI;
+			Tangent = myatan2(pG.Y-pG.J, pG.X-pG.I)-_1p2PI;
 	}
-	else if(pG->Name==G03)
+	else if(pG.Name==G03)
 	{
 		if(StartOrEnd==0)
-			Tangent = myatan2(pG->Y0-pG->J, pG->X0-pG->I)+_1p2PI;
+			Tangent = myatan2(pG.Y0-pG.J, pG.X0-pG.I)+_1p2PI;
 		else
-			Tangent = myatan2(pG->Y-pG->J, pG->X-pG->I)+_1p2PI;
+			Tangent = myatan2(pG.Y-pG.J, pG.X-pG.I)+_1p2PI;
 	}
 	return Tangent;
 }
@@ -1020,12 +1016,12 @@ double Kerf::GetTangent(GCodeARRAY_STRUCT *pG, int StartOrEnd)
     对未有增加割缝补偿的G 代码未补偿后的G代码
     只对G01, G02,G03进行计算
     kerfvalue < 0为左补偿，
-    kerfvalue>0为右补偿
+    kerfvalue > 0为右补偿
     返回值 的Name==M02为错误补偿 
 */
-int Kerf::GetAddKerfGCode(GCodeARRAY_STRUCT &pNoKerfG, GCodeARRAY_STRUCT &AddKerfGCode,double kerfvalue,int dir)
+int Kerf::GetAddKerfGCode(GCodeStruct &pNoKerfG, GCodeStruct &AddKerfGCode, double kerfvalue, int dir)
 {
-	//GCodeARRAY_STRUCT KerfGCode;
+	//GCodeStruct KerfGCode;
 	double KerfX=0,KerfY=0;
 	double LastTangent, NextTangent;
 	AddKerfGCode.Name = M02;
@@ -1068,7 +1064,7 @@ int Kerf::GetAddKerfGCode(GCodeARRAY_STRUCT &pNoKerfG, GCodeARRAY_STRUCT &AddKer
 			KerfY = (kerfvalue)*sin(LastTangent-_1p2PI);
 		}
 		AddKerfGCode = pNoKerfG;
-		AddKerfGCode.R-=kerfvalue;
+		AddKerfGCode.R -= kerfvalue;
 		AddKerfGCode.X0 += KerfX;
 		AddKerfGCode.Y0 += KerfY;
 
@@ -1137,12 +1133,12 @@ int Kerf::GetAddKerfGCode(GCodeARRAY_STRUCT &pNoKerfG, GCodeARRAY_STRUCT &AddKer
 	AddLine补偿的G代码, Name==G01(补偿的是小直线 ),G02(左补偿),G03(左补偿),M02(截取了，没有补偿)
 	
 */
-int Kerf::AddOrTrunc(GCodeARRAY_STRUCT &pPreviousLine,GCodeARRAY_STRUCT &pNextLine,GCodeARRAY_STRUCT &pAddLine,int dir)
+int Kerf::AddOrTrunc(GCodeStruct &pPreviousLine,GCodeStruct &pNextLine, GCodeStruct &pAddLine, int dir)
 {
 	double AngleChange=0;
 	//long InterTrunc;
 	
-	AngleChange = GetTangent(&pNextLine,0)-GetTangent(&pPreviousLine,1);
+	AngleChange = GetTangent(pNextLine,0)-GetTangent(pPreviousLine,1);
 	
 	while(AngleChange>(PI))
 	{
@@ -1157,7 +1153,7 @@ int Kerf::AddOrTrunc(GCodeARRAY_STRUCT &pPreviousLine,GCodeARRAY_STRUCT &pNextLi
 		if(dir == G41) //左补偿
 			pAddLine.Name = G02;
 		else
-			pAddLine.Name = G03;	
+			pAddLine.Name = G03;
 	}
 	else if(IsLesser(fabs(AngleChange),0.0055))///1 degree
 	{
@@ -1165,7 +1161,7 @@ int Kerf::AddOrTrunc(GCodeARRAY_STRUCT &pPreviousLine,GCodeARRAY_STRUCT &pNextLi
 	}
 	/*else if(IsLesser(fabs(AngleChange),0.035))
 	{
-		pAddLine.Name = G01;	
+		pAddLine.Name = G01;
 	}*/
 	else if(dir == G41) //左补偿
 	{
@@ -1174,9 +1170,9 @@ int Kerf::AddOrTrunc(GCodeARRAY_STRUCT &pPreviousLine,GCodeARRAY_STRUCT &pNextLi
 		else
 		{	
 			if(IsLesser(fabs(AngleChange),0.085))
-				pAddLine.Name = G01;	
+				pAddLine.Name = G01;
 			else
-				pAddLine.Name = G02;	
+				pAddLine.Name = G02;
 		}
 	}
 	else
@@ -1186,72 +1182,73 @@ int Kerf::AddOrTrunc(GCodeARRAY_STRUCT &pPreviousLine,GCodeARRAY_STRUCT &pNextLi
 		else
 		{
 			if(IsLesser(fabs(AngleChange),0.017))
-				pAddLine.Name = G01;	
+				pAddLine.Name = G01;
 			else
-				pAddLine.Name = G03;	
+				pAddLine.Name = G03;
 		}
 	}
   return 0;
 }
-int Kerf::Setupkerf(GCodeARRAY_STRUCT *pGcode, double *dx,double *dy,double kerfvlaue, int dir)
+
+int Kerf::Setupkerf(GCodeStruct &pGcode, double &dx, double &dy, double kerfvlaue, int dir)
 {
 	double QieXianAngle1;
-	if(pGcode->Name==G01 ||pGcode->Name==G00)
+	if(pGcode.Name==G01 ||pGcode.Name==G00)
 	{
-		QieXianAngle1 = myatan2(pGcode->Y-pGcode->Y0,pGcode->X-pGcode->X0);
+		QieXianAngle1 = myatan2(pGcode.Y-pGcode.Y0, pGcode.X-pGcode.X0);
 	}
-	else if(pGcode->Name==G02 )
+	else if(pGcode.Name==G02 )
 	{
-		QieXianAngle1 = myatan2(pGcode->Y0-pGcode->J,pGcode->X0-pGcode->I)-_1p2PI;	
+		QieXianAngle1 = myatan2(pGcode.Y0-pGcode.J,pGcode.X0-pGcode.I)-_1p2PI;	
 	}
-	else if(pGcode->Name==G03 )
+	else if(pGcode.Name==G03 )
 	{
-		QieXianAngle1 = myatan2(pGcode->Y0-pGcode->J,pGcode->X0-pGcode->I)+_1p2PI;
+		QieXianAngle1 = myatan2(pGcode.Y0-pGcode.J,pGcode.X0-pGcode.I)+_1p2PI;
 	}
 	if(dir==G41)
 	{
-		*dx = kerfvlaue*cos(QieXianAngle1+_1p2PI);
-		*dy = kerfvlaue*sin(QieXianAngle1+_1p2PI);
+		dx = kerfvlaue*cos(QieXianAngle1+_1p2PI);
+		dy = kerfvlaue*sin(QieXianAngle1+_1p2PI);
 	}
 	else
 	{
-		*dx = kerfvlaue*cos(QieXianAngle1-_1p2PI);
-		*dy = kerfvlaue*sin(QieXianAngle1-_1p2PI);
+		dx = kerfvlaue*cos(QieXianAngle1-_1p2PI);
+		dy = kerfvlaue*sin(QieXianAngle1-_1p2PI);
 	}
   return 0;
 }
 
-int Kerf::Canclekerf(GCodeARRAY_STRUCT *pGcode, double *dx,double *dy,double kerfvlaue, int dir)
+int Kerf::Canclekerf(GCodeStruct &pGcode, double &dx, double &dy, double kerfvlaue, int dir)
 {
 	double QieXianAngle1;
-	if(pGcode->Name==G01||pGcode->Name==G00 )
+	if(pGcode.Name==G01||pGcode.Name==G00 )
 	{
-		QieXianAngle1 = myatan2(pGcode->Y-pGcode->Y0,pGcode->X-pGcode->X0);
+		QieXianAngle1 = myatan2(pGcode.Y-pGcode.Y0,pGcode.X-pGcode.X0);
 	}
-	else if(pGcode->Name==G02 )
+	else if(pGcode.Name==G02 )
 	{
-		QieXianAngle1 = myatan2(pGcode->Y-pGcode->J,pGcode->X-pGcode->I)-_1p2PI;	
+		QieXianAngle1 = myatan2(pGcode.Y-pGcode.J,pGcode.X-pGcode.I)-_1p2PI;	
 	}
-	else if(pGcode->Name==G03 )
+	else if(pGcode.Name==G03 )
 	{
-		QieXianAngle1 = myatan2(pGcode->Y-pGcode->J,pGcode->X-pGcode->I)+_1p2PI;
+		QieXianAngle1 = myatan2(pGcode.Y-pGcode.J,pGcode.X-pGcode.I)+_1p2PI;
 	}
 	if(dir==G41)
 	{
-		*dx = kerfvlaue*cos(QieXianAngle1-_1p2PI);
-		*dy = kerfvlaue*sin(QieXianAngle1-_1p2PI);
+		dx = kerfvlaue*cos(QieXianAngle1-_1p2PI);
+		dy = kerfvlaue*sin(QieXianAngle1-_1p2PI);
 	}
 	else
 	{
-		*dx = kerfvlaue*cos(QieXianAngle1+_1p2PI);
-		*dy = kerfvlaue*sin(QieXianAngle1+_1p2PI);
+		dx = kerfvlaue*cos(QieXianAngle1+_1p2PI);
+		dy = kerfvlaue*sin(QieXianAngle1+_1p2PI);
 	}
   return 0;
 }
 
 //#define  Assert(p) GUI_DispStringAt(p,col[30],row[10])
-void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
-                  std::vector<GCodeARRAY_STRUCT> &NoKerfFile) {
+void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
+                  std::vector<GCodeStruct> &NoKerfFile) {
 
 	enum kerfstatus
 	{
@@ -1264,9 +1261,9 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 		SETTEDG42KERF, //已经建立起G42补偿
 		G40KERF  //撤消补偿状态
 	};
-	std::vector<GCodeARRAY_STRUCT>::iterator GCodeArryPtrSrc = NoKerfFile.begin();
-	std::vector<GCodeARRAY_STRUCT>::iterator GCodeArryPtrDes = DesKerFile.begin();
-	GCodeARRAY_STRUCT GTemp1,GTemp2;
+	std::vector<GCodeStruct>::iterator GCodeArryPtrSrc = NoKerfFile.begin();
+	std::vector<GCodeStruct>::iterator GCodeArryPtrDes = DesKerFile.begin();
+	GCodeStruct GTemp1,GTemp2;
 	char kerf_on=0;  // 1-建立割缝 
 	double deltax,deltay,point2x,point2y;
 	double x0,y0,x1,y1,cx,cy;
@@ -1319,7 +1316,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 			if(kerf_on!=SETTEDG41KERF&&kerf_on!=SETTEDG42KERF)
 			{
 				i=0;
-				do{
+				do {
 					
 					GTemp1 = *(GCodeArryPtrSrc+i);
 					i++;
@@ -1330,7 +1327,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				
 	       if(GTemp1.Name!=M02)
 	       {
-          Setupkerf(&GTemp1, &deltax, &deltay, kerf, LastGName);
+          Setupkerf(GTemp1, deltax, deltay, kerf, LastGName);
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *GCodeArryPtrSrc;
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
@@ -1361,7 +1358,7 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 					i++;
 				} while (GTemp1.ShowLine>1 && GTemp1.Name!=G01  && GTemp1.Name!=G02 && GTemp1.Name!=G03);
 
-        Canclekerf(&GTemp1, &deltax, &deltay, kerf, LastGName);
+        Canclekerf(GTemp1, deltax, deltay, kerf, LastGName);
 			  //GCodeArryPtrDes++;
 			  //*GCodeArryPtrDes = *GCodeArryPtrSrc;
         GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
@@ -1393,8 +1390,8 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 				
         GetAddKerfGCode(*GCodeArryPtrSrc, GTemp1, kerf, LastGName);
 				//GCodeArryPtrDes++;
-				//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
-        GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
+				//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+        GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
 	      GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 				GCodeArryPtrDes->Name = G01;
 				GCodeArryPtrDes->X0 = GTemp1.X0;
@@ -2319,268 +2316,16 @@ void Kerf::g2kerf(std::vector<GCodeARRAY_STRUCT> &DesKerFile,
 	GCodeArryPtrDes->Name = M02;
 }
 
-bool Kerf::ReadGCode(const std::string &file_name, std::vector<std::string> &code_lines) {
-  std::ifstream in_file(file_name.c_str());
-  if (!in_file) {
-    return false;
-  }
-  std::string line_text = "";
-  while (getline(in_file, line_text)) {
-    code_lines.push_back(line_text);
-  }
-
-  in_file.close();
-  in_file.clear();
-
-  return true;
-}
-
-// assume that is an absolute g code.
-void Kerf::GCodeParse(const std::vector<std::string> &code_lines) {
-  GfileFloatNoKerf.clear();
-
-  double start_X = 0.;
-  double start_Y = 0.;
-
-  for (size_t i = 0; i < code_lines.size(); i++) {
-    GCodeARRAY_STRUCT code_array;
-    code_array.X0 = code_array.X = start_X;
-    code_array.Y0 = code_array.Y = start_Y;
-
-    std::string code_type = code_lines[i].substr(0, 3);
-    if (code_type.compare("G00") == 0) {
-      code_array.Name = G00;
-      code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
-      code_array.Y = is_absolute ? GetCodeValue(code_lines[i], "Y") : start_Y + GetCodeValue(code_lines[i], "Y");
-
-      code_array.X0 = start_X;
-      code_array.Y0 = start_Y;
-      start_X = code_array.X;
-      start_Y = code_array.Y;
-
-      code_array.Length = sqrt(pow(code_array.X - code_array.X0, 2)
-          + pow(code_array.Y - code_array.Y0, 2));
-
-    } else if (code_type.compare("G01") == 0) {
-      code_array.Name = G01;
-      code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
-      code_array.Y = is_absolute ? GetCodeValue(code_lines[i], "Y") : start_Y + GetCodeValue(code_lines[i], "Y");
-      code_array.F = GetCodeValue(code_lines[i], "F");
-
-      code_array.X0 = start_X;
-      code_array.Y0 = start_Y;
-      start_X = code_array.X;
-      start_Y = code_array.Y;
-
-      code_array.Length = sqrt(pow(code_array.X - code_array.X0, 2)
-          + pow(code_array.Y - code_array.Y0, 2));
-
-    } else if (code_type.compare("G02") == 0) {
-      code_array.Name = G02;
-      code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
-      code_array.Y = is_absolute ? GetCodeValue(code_lines[i], "Y") : start_Y + GetCodeValue(code_lines[i], "Y");
-      code_array.I = is_absolute ? GetCodeValue(code_lines[i], "I") : start_X + GetCodeValue(code_lines[i], "I");
-      code_array.J = is_absolute ? GetCodeValue(code_lines[i], "J") : start_Y + GetCodeValue(code_lines[i], "J");
-      code_array.F = GetCodeValue(code_lines[i], "F");
-
-      code_array.X0 = start_X;
-      code_array.Y0 = start_Y;
-      start_X = code_array.X;
-      start_Y = code_array.Y;
-
-      code_array.R = GetRadius(code_array);
-      code_array.Length = 2 * code_array.R;
-    } else if (code_type.compare("G03") == 0) {
-      code_array.Name = G03;
-      code_array.X = is_absolute ? GetCodeValue(code_lines[i], "X") : start_X + GetCodeValue(code_lines[i], "X");
-      code_array.Y = is_absolute ? GetCodeValue(code_lines[i], "Y") : start_Y + GetCodeValue(code_lines[i], "Y");
-      code_array.I = is_absolute ? GetCodeValue(code_lines[i], "I") : start_X + GetCodeValue(code_lines[i], "I");
-      code_array.J = is_absolute ? GetCodeValue(code_lines[i], "J") : start_Y + GetCodeValue(code_lines[i], "J");
-      code_array.F = GetCodeValue(code_lines[i], "F");
-
-      code_array.X0 = start_X;
-      code_array.Y0 = start_Y;
-      start_X = code_array.X;
-      start_Y = code_array.Y;
-
-      code_array.R = GetRadius(code_array);
-      code_array.Length = 2 * code_array.R;
-    } else if (code_type.compare("G41") == 0) {
-      code_array.Name = G41;
-	  code_array.KerfValue = GetCodeValue(code_lines[i], "K");
-    } else if (code_type.compare("G42") == 0) {
-      code_array.Name = G42;
-      code_array.KerfValue = GetCodeValue(code_lines[i], "K");
-    } else if (code_type.compare("G40") == 0) {
-      code_array.Name = G40;
-    } else if (code_type.compare("G04") == 0) {
-      code_array.Name = G04;
-      code_array.Delay = GetCodeValue(code_lines[i], "F");
-    } else if (code_type.compare("G20") == 0) {
-      code_array.Name = G20;
-    } else if (code_type.compare("G21") == 0) {
-      code_array.Name = G21;
-    } else if (code_type.compare("G90") == 0) {
-      code_array.Name = G90;
-      is_absolute = true;
-    } else if (code_type.compare("G91") == 0) {
-      code_array.Name = G91;
-      is_absolute = false;
-    } else if (code_type.compare("G99") == 0) {
-      code_array.Name = G99;
-      code_array.ScaleFactor = GetCodeValue(code_lines[i], "X");
-      code_array.RotateAngle = GetCodeValue(code_lines[i], "Y");
-      code_array.HorizonMirror = GetCodeValue(code_lines[i], "I");
-      code_array.VerticalMirror = GetCodeValue(code_lines[i], "J");
-    } else if (code_type.compare("M00") == 0) {
-      code_array.Name = M00;
-    } else if (code_type.compare("M02") == 0) {
-      code_array.Name = M02;
-    } else if (code_type.compare("M07") == 0) {
-      code_array.Name = M07;
-    } else if (code_type.compare("M08") == 0) {
-      code_array.Name = M08;
-    } else if (code_type.compare("M09") == 0) {
-      code_array.Name = M09;
-    } else if (code_type.compare("M10") == 0) {
-      code_array.Name = M10;
-    } else if (code_type.compare("M11") == 0) {
-      code_array.Name = M11;
-    } else if (code_type.compare("M12") == 0) {
-      code_array.Name = M12;
-    }
-
-    GfileFloatNoKerf.push_back(code_array);
-  }
+void Kerf::GKerfProc(const std::string &noKerfFile, const std::string &KerfFile) {
+  GCodeParse parse;
+  std::vector<std::string> code_lines;
+  parse.ReadGCode(noKerfFile, code_lines);
+  parse.ParseGCode(code_lines, GfileFloatNoKerf);
 
   GfileFloatKerf.clear();
   g2kerf(GfileFloatKerf, GfileFloatNoKerf);
-}
 
-double Kerf::GetCodeValue(const std::string &code_line,
-                          const std::string &match) {
-
-  std::size_t pos = code_line.find(match);
-  if (pos == std::string::npos) {
-    return 0.;
-  }
-  std::string value = code_line.substr(pos + 1);
-  char *endptr;
-  return strtod(value.c_str(), &endptr);
-}
-
-bool Kerf::WriteGCode(const std::string &file_name,
-                      const std::vector<std::string> &contents) {
-
-  std::ofstream out_file(file_name.c_str());
-  if (!out_file) {
-    return false;
-  }
-  for (size_t i = 0; i < contents.size(); i++) {
-    out_file << contents[i] << "\n";
-  }
-  out_file.close();
-  out_file.clear();
-  return true;
-}
-
-void Kerf::GenerateKerfGCode(std::vector<std::string> &code_lines) {
   code_lines.clear();
-  for (size_t i = 0; i < GfileFloatKerf.size(); i++) {
-    code_lines.push_back(TransformGCodeLine(GfileFloatKerf[i]));
-  }
-}
-
-std::string Kerf::TransformGCodeLine(const GCodeARRAY_STRUCT &gcode_array) {
-  char GCODE[100];
-  switch (gcode_array.Name) {
-   case G00:
-    sprintf(GCODE, "G00 X%.3lf Y%.3lf",
-        is_absolute ? gcode_array.X : gcode_array.X - gcode_array.X0,
-        is_absolute ? gcode_array.Y : gcode_array.Y - gcode_array.Y0);
-
-    break;
-   case G01:
-    sprintf(GCODE, "G01 X%.3lf Y%.3lf F%.3lf",
-        is_absolute ? gcode_array.X : gcode_array.X - gcode_array.X0,
-        is_absolute ? gcode_array.Y : gcode_array.Y - gcode_array.Y0,
-        gcode_array.F);
-
-    break;
-   case G02:
-    sprintf(GCODE, "G02 X%.3lf Y%.3lf I%.3lf J%.3lf F%.3lf",
-        is_absolute ? gcode_array.X : gcode_array.X - gcode_array.X0,
-        is_absolute ? gcode_array.Y : gcode_array.Y - gcode_array.Y0,
-        is_absolute ? gcode_array.I : gcode_array.I - gcode_array.X0,
-        is_absolute ? gcode_array.J : gcode_array.J - gcode_array.Y0,
-        gcode_array.F);
-
-    break;
-   case G03:
-    sprintf(GCODE, "G03 X%.3lf Y%.3lf I%.3lf J%.3lf F%.3lf",
-        is_absolute ? gcode_array.X : gcode_array.X - gcode_array.X0,
-        is_absolute ? gcode_array.Y : gcode_array.Y - gcode_array.Y0,
-        is_absolute ? gcode_array.I : gcode_array.I - gcode_array.X0,
-        is_absolute ? gcode_array.J : gcode_array.J - gcode_array.Y0,
-        gcode_array.F);
-
-    break;
-   case G04:
-    sprintf(GCODE, "G04 F%.3lf", gcode_array.Delay);
-    break;
-   case G40:
-    sprintf(GCODE, "G40");
-    break;
-   case G41:
-    sprintf(GCODE, "G41");
-    break;
-   case G42:
-    sprintf(GCODE, "G42");
-    break;
-   case G20:
-    sprintf(GCODE, "G20");
-    break;
-   case G21:
-    sprintf(GCODE, "G21");
-    break;
-   case G90:
-    sprintf(GCODE, "G90");
-    break;
-   case G91:
-    sprintf(GCODE, "G91");
-    break;
-   case G99:
-    sprintf(GCODE, "G99 X%.3lf Y%.3lf I%.3lf J%.3lf",
-        gcode_array.ScaleFactor, gcode_array.RotateAngle,
-        gcode_array.HorizonMirror, gcode_array.VerticalMirror);
-
-    break;
-   case M00:
-    sprintf(GCODE, "M00");
-    break;
-   case M02:
-    sprintf(GCODE, "M02");
-    break;
-   case M07:
-    sprintf(GCODE, "M07");
-    break;
-   case M08:
-    sprintf(GCODE, "M08");
-    break;
-   case M09:
-    sprintf(GCODE, "M09");
-    break;
-   case M10:
-    sprintf(GCODE, "M10");
-    break;
-   case M11:
-    sprintf(GCODE, "M11");
-    break;
-   case M12:
-    sprintf(GCODE, "M12");
-    break;
-   default:
-    break;
-  }
-  return std::string(GCODE);
+  parse.GenerateGCode(GfileFloatKerf, code_lines);
+  parse.WriteGCode(KerfFile, code_lines);
 }
