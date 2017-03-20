@@ -1,4 +1,4 @@
-// Copyright 2016 Fangling Software Co., Ltd. All Rights Reserved.
+ï»¿// Copyright 2016 Fangling Software Co., Ltd. All Rights Reserved.
 // Author: shizhan-shelly@hotmail.com (Zhan Shi)
 
 #include "Kerf.h"
@@ -7,8 +7,8 @@
 
 #include "GCodeParse.h"
 
-//GCodeStruct GfileFloatKerf[80000]; // ÓĞ¸î·ìµÄ¸¡µãĞÍÇĞ¸î´úÂë
-//GCodeStruct GfileFloatNoKerf[80000]; // Ã»ÓĞ¸î·ìµÄ¸¡µãĞÍÇĞ¸î´úÂë
+//GCodeStruct GfileFloatKerf[80000]; // æœ‰å‰²ç¼çš„æµ®ç‚¹å‹åˆ‡å‰²ä»£ç 
+//GCodeStruct GfileFloatNoKerf[80000]; // æ²¡æœ‰å‰²ç¼çš„æµ®ç‚¹å‹åˆ‡å‰²ä»£ç 
 //GraphyLimit graphylimitxy;
 
 const double INFINITESIMAL = 0.00001;//0.0000001;
@@ -77,11 +77,11 @@ double sqr(double a) {
 int circle_intersect(Circle_t A, Circle_t B, Point_t *ia, Point_t *ib) {
   double a, b, c, d, k, aa, bb, cc, dd, drt;
   if (IsEqual(A.x, B.x) && IsEqual(A.y, B.y)) {
-    return 5; // Í¬ĞÄÔ²
+    return 5; // åŒå¿ƒåœ†
   }
   dd = dist(A.x, A.y, B.x, B.y);
   if (A.r + B.r + EP < dd) {
-    return 1;  // ÏàÀë
+    return 1;  // ç›¸ç¦»
   }
   a = B.x - A.x;
   b = B.y - A.y;
@@ -95,7 +95,7 @@ int circle_intersect(Circle_t A, Circle_t B, Point_t *ia, Point_t *ib) {
 
   drt = sqr(bb) - 4 * aa * cc;
   if (drt < 0) {
-    return 5; // ÎŞ½â
+    return 5; // æ— è§£
   }
   drt = sqrt(drt);
   ia->y = (-bb + drt) / 2 / aa;
@@ -113,13 +113,13 @@ int circle_intersect(Circle_t A, Circle_t B, Point_t *ia, Point_t *ib) {
   ib->y += A.y;
   if (fabs(ia->y - ib->y) < EP) {
     if (fabs(A.r + B.r - dd) < EP) {
-      return 2; // ÍâÇĞÒ»¸ö½»µã
+      return 2; // å¤–åˆ‡ä¸€ä¸ªäº¤ç‚¹
     }
     if (fabs(dd - (maxfabs(A.r, B.r) - minfabs(A.r, B.r))) < EP) {
-      return 3; // ÄÚÇĞÒ»¸ö½»µã
+      return 3; // å†…åˆ‡ä¸€ä¸ªäº¤ç‚¹
     }
   }
-  return 4; // 2¸ö½»µã
+  return 4; // 2ä¸ªäº¤ç‚¹
 }
 
 /**********************************************************/
@@ -149,14 +149,14 @@ int CalcRoots(double a, double b, double c, double *root1, double *root2) {
     }
   }
 }
-//lead_type 0--½»µã¿¿½üÔ²»¡ÒıÈëµã 1--½»µã¿¿½üÔ²»¡Òı³öµã
+//lead_type 0--äº¤ç‚¹é è¿‘åœ†å¼§å¼•å…¥ç‚¹ 1--äº¤ç‚¹é è¿‘åœ†å¼§å¼•å‡ºç‚¹
 /**********************************************************/
 int if_in_arc_ccw(double ang_temp,double ang_str,double ang_end,int lead_type)
 {
-	/*ang_tempÓÃÀ´¿´ÊÇ·ñÔÚÔ²»¡ÄÚ£¬ÒÑ¾­½«½Ç¶È±äÎª+µ«360¶È¸½½ü»¹ÊÇ*/
-	/*Òª×¢Òâ£¬²Î¿¼»­Ô²²¿·Ö*/
-	/*Èç¹ûstr>endÔòtemp>str||temp<end¼´¿É*/
-	/*Èç¹ûstr<endÔòstr<temp<end¼´¿É*/
+	/*ang_tempç”¨æ¥çœ‹æ˜¯å¦åœ¨åœ†å¼§å†…ï¼Œå·²ç»å°†è§’åº¦å˜ä¸º+ä½†360åº¦é™„è¿‘è¿˜æ˜¯*/
+	/*è¦æ³¨æ„ï¼Œå‚è€ƒç”»åœ†éƒ¨åˆ†*/
+	/*å¦‚æœstr>endåˆ™temp>str||temp<endå³å¯*/
+	/*å¦‚æœstr<endåˆ™str<temp<endå³å¯*/
 	/*
   if (ang_str<0) ang_str+=6.28;
 	if (ang_end<0) ang_end+=6.28;
@@ -202,13 +202,13 @@ int if_in_arc_ccw(double ang_temp,double ang_str,double ang_end,int lead_type)
 
   return 1;
 }
-//lead_type 0--½»µã¿¿½üÔ²»¡ÒıÈëµã 1--½»µã¿¿½üÔ²»¡Òı³öµã
+//lead_type 0--äº¤ç‚¹é è¿‘åœ†å¼§å¼•å…¥ç‚¹ 1--äº¤ç‚¹é è¿‘åœ†å¼§å¼•å‡ºç‚¹
 int if_in_arc_cw(double ang_temp,double ang_str,double ang_end,int lead_type)
 {
-	/*ang_tempÓÃÀ´¿´ÊÇ·ñÔÚÔ²»¡ÄÚ£¬ÒÑ¾­½«½Ç¶È±äÎª+µ«360¶È¸½½ü»¹ÊÇ*/
-	/*Òª×¢Òâ£¬²Î¿¼»­Ô²²¿·Ö*/
-	/*Èç¹ûstr>endÔòstr>temp>end¼´¿É*/
-	/*Èç¹ûstr<endÔòtemp<str||temp>end¼´¿É*/
+	/*ang_tempç”¨æ¥çœ‹æ˜¯å¦åœ¨åœ†å¼§å†…ï¼Œå·²ç»å°†è§’åº¦å˜ä¸º+ä½†360åº¦é™„è¿‘è¿˜æ˜¯*/
+	/*è¦æ³¨æ„ï¼Œå‚è€ƒç”»åœ†éƒ¨åˆ†*/
+	/*å¦‚æœstr>endåˆ™str>temp>endå³å¯*/
+	/*å¦‚æœstr<endåˆ™temp<str||temp>endå³å¯*/
 	/*
 	if (ang_str<0) ang_str+=_2PI;
 	if (ang_end<0) ang_end+=_2PI;
@@ -264,9 +264,9 @@ int if_point_in_arc(double x0,double y0, double x1,double y1, double cx,double c
 {
 	double ang_str,ang_end,ang_pt;
 	double d_t1,d_t2,d_t3,d_t4;
-	d_t1 = x1-cx;     // ÓÉÖÕµãÏà¶ÔÆğµã×ø±ê×ª»»³ÉÖÕµãÏà¶ÔÔ²ĞÄ×ø±ê
+	d_t1 = x1-cx;     // ç”±ç»ˆç‚¹ç›¸å¯¹èµ·ç‚¹åæ ‡è½¬æ¢æˆç»ˆç‚¹ç›¸å¯¹åœ†å¿ƒåæ ‡
   d_t2 = y1-cy;
-  d_t3 = x0-cx;   // ÓÉÔ²ĞÄÏà¶ÔÆğµã×ø±ê×ª»»³ÉÆğµãÏà¶ÔÔ²ĞÄ×ø±ê
+  d_t3 = x0-cx;   // ç”±åœ†å¿ƒç›¸å¯¹èµ·ç‚¹åæ ‡è½¬æ¢æˆèµ·ç‚¹ç›¸å¯¹åœ†å¿ƒåæ ‡
   d_t4 = y0-cy;
 	ang_end = myatan2(d_t2,d_t1);  
 	ang_str = myatan2(d_t4, d_t3);
@@ -332,7 +332,7 @@ int point_in_line(double pointx,double pointy,double x0,double y0,double x,doubl
 	double R,R2;
 	R = (x-pointx)*(pointx - x0);
 	R2 =(y-pointy)*(pointy-y0);
-	if(R>=0&&R2>=0)  //µãÔÚÏß¶ÎÉÏ
+	if(R>=0&&R2>=0)  //ç‚¹åœ¨çº¿æ®µä¸Š
 		return 1;
 	else
 		return 0;
@@ -355,11 +355,11 @@ int if_in_line_line(double ang1x,double ang1y,double ang2x,double ang2y,double a
 		return 1;
 }
 /*
-·µ»ØÖµ :
-	1,5-ÏàÀë
-	2-ÍâÇĞ
-	3-ÄÚÇĞ
-	4-Á½¸ö½»µã
+è¿”å›å€¼ :
+	1,5-ç›¸ç¦»
+	2-å¤–åˆ‡
+	3-å†…åˆ‡
+	4-ä¸¤ä¸ªäº¤ç‚¹
 */
 int CircleIntersector(double x1, double y1, 
                       double r1, double x2, 
@@ -383,11 +383,11 @@ int CircleIntersector(double x1, double y1,
   Circle_t A, B;
   Point_t PointA, PointB;
   if (IsLesser(r1 + r2, dd)) {
-    return 1; // ÏàÀë
+    return 1; // ç›¸ç¦»
   }
 
   if (IsLesser(dd, fabs(r1 - r2)) || (IsEqual(x1, x2) && IsEqual(y1, y2) && IsEqual(r1, r2))) {
-    return 5; // Ïàº¬
+    return 5; // ç›¸å«
   }
 
   a = 2. * r1 * (x1 - x2);
@@ -396,9 +396,9 @@ int CircleIntersector(double x1, double y1,
   p = sqr(a) + sqr(b);
   q = -2. * a * c;
   
-  if((1 - sqr(-q / p / 2))<0) // ¼¸ºõÏàÇĞ»òÏà½»£¬µ«Êµ¼ÊÏàÀëµÄÇé¿ö
+  if((1 - sqr(-q / p / 2))<0) // å‡ ä¹ç›¸åˆ‡æˆ–ç›¸äº¤ï¼Œä½†å®é™…ç›¸ç¦»çš„æƒ…å†µ
 		return 1;
-  // ÏàÇĞ
+  // ç›¸åˆ‡
   if (IsEqual(dd, fabs(r1 - r2)) || IsEqual(dd, r1 + r2)) {
     if(IsEqual(dd, fabs(r1 - r2)))
     {
@@ -441,10 +441,10 @@ int CircleIntersector(double x1, double y1,
   rtn = circle_intersect(A,B,&PointA,&PointB);
   if(rtn ==1)
   {
-    //Í¬ĞÄÔ²
+    //åŒå¿ƒåœ†
     return 5;
   }
-  else if(rtn==4)//Á½¸ö½»µã
+  else if(rtn==4)//ä¸¤ä¸ªäº¤ç‚¹
   {
       *ix1 = PointA.x;
       *iy1 = PointA.y;
@@ -452,7 +452,7 @@ int CircleIntersector(double x1, double y1,
       *iy2 = PointB.y;
       return 4;
   }
-  else if(rtn==2)//ÍâÇĞÒ»¸ö½»µã
+  else if(rtn==2)//å¤–åˆ‡ä¸€ä¸ªäº¤ç‚¹
   {
       *ix1 = PointA.x;
       *iy1 = PointA.y;
@@ -460,7 +460,7 @@ int CircleIntersector(double x1, double y1,
       *iy2 = PointB.y;
       return 2;
   }
-  else if(rtn ==3 )//ÄÚÇĞÒ»¸ö½»µã
+  else if(rtn ==3 )//å†…åˆ‡ä¸€ä¸ªäº¤ç‚¹
   {
       *ix1 = PointA.x;
       *iy1 = PointA.y;
@@ -497,12 +497,12 @@ double mysqrt(double x)
 }
 
 /*
-·µ»ØÖµ :
-  0 Æ½ĞĞ
-  1 ÓĞ½»µã
+è¿”å›å€¼ :
+  0 å¹³è¡Œ
+  1 æœ‰äº¤ç‚¹
 */
 int TwoLineIsIntersect(double   x0,   double   y0,   double   x1,   double   y1,   double   x2,   double   y2,   double   x3,   double   y3,   double   *InterX,   double   *InterY)   
-{ //Á½ÌõÏß¶ÎÊÇ·ñÏà½»X0X1   AND   X1X2   
+{ //ä¸¤æ¡çº¿æ®µæ˜¯å¦ç›¸äº¤X0X1   AND   X1X2   
   //double   x,   y;   
   #define Min(v0,v1) ((v0>v1) ? v1 : v0)
   #define Max(v0,v1) ((v0>v1) ? v0 : v1)
@@ -587,7 +587,7 @@ int TwoLineIsIntersect(double   x0,   double   y0,   double   x1,   double   y1,
 	return -1;
   }
 /*int   TwoLineIsIntersect(double   x0,   double   y0,   double   x1,   double   y1,   double   x2,   double   y2,   double   x3,   double   y3,   double   *InterX,   double   *InterY)   
-  {   //Á½ÌõÏß¶ÎÊÇ·ñÏà½»X0X1   AND   X1X2   
+  {   //ä¸¤æ¡çº¿æ®µæ˜¯å¦ç›¸äº¤X0X1   AND   X1X2   
         double   x,   y;   
         #define Min(v0,v1) ((v0>v1) ? v1 : v0)
 		#define Max(v0,v1) ((v0>v1) ? v0 : v1)
@@ -621,13 +621,13 @@ int TwoLineIsIntersect(double   x0,   double   y0,   double   x1,   double   y1,
         {   
 
                 if(IsEqual(k1,k2))   
-                {   //Æ½ĞĞ²»Ïà½»   
-                      float   d1   =   abs(y0*(x1-x0)-x0*(y1-y0)-y2*(x3-x2)+x2*(y3-y2));   //¾àÀë¹«Ê½d   =   abs(c1-c2)   /   sqrt(a*a+b*b)   
+                {   //å¹³è¡Œä¸ç›¸äº¤   
+                      float   d1   =   abs(y0*(x1-x0)-x0*(y1-y0)-y2*(x3-x2)+x2*(y3-y2));   //è·ç¦»å…¬å¼d   =   abs(c1-c2)   /   sqrt(a*a+b*b)   
                       if(d1==0)   
-                      {//Ö±ÏßÖØºÏ   
+                      {//ç›´çº¿é‡åˆ   
                             if((x2>Minx01   &&   x2<Maxy01   &&   y2>Miny01   &&   y2<Maxy01)   ||   (x3>Minx01   &&   x3<Maxy01   &&   y3>Miny01   &&   y3<Maxy01)   
                             ||   (x0>Minx23   &&   x0<Maxy23   &&   y0>Miny23   &&   y0<Maxy23)   ||   (x1>Minx23   &&   x1<Maxy23   &&   y1>Miny23   &&   y1<Maxy23))   
-                            {     //Êµ¼ÊÅö×²ÎÊÌâÏß¶ÎÖØºÏÈÏÎªÏà½»ÁË   
+                            {     //å®é™…ç¢°æ’é—®é¢˜çº¿æ®µé‡åˆè®¤ä¸ºç›¸äº¤äº†   
                                   return   0;//;true;   
                             }   
                             else   
@@ -675,10 +675,10 @@ int TwoLineIsIntersect(double   x0,   double   y0,   double   x1,   double   y1,
         return   -1;//false;   
   }*/
 /*
-	·µ»ØÖµ:
-		0-Ã»ÓĞ½»µã£¬¼´ÏàÀë
-		1-Ò»¸ö½»µã£¬¼´ÏàÇĞ
-		2-¶şÁ½¸ö½»µã£¬¼´Ïà½»
+	è¿”å›å€¼:
+		0-æ²¡æœ‰äº¤ç‚¹ï¼Œå³ç›¸ç¦»
+		1-ä¸€ä¸ªäº¤ç‚¹ï¼Œå³ç›¸åˆ‡
+		2-äºŒä¸¤ä¸ªäº¤ç‚¹ï¼Œå³ç›¸äº¤
 		
 */
 int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double yc0,double Radius,double *InterX1,double *InterY1,double *InterX2,double *InterY2)
@@ -689,21 +689,21 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 	double x_intersect2 = 0,y_intersect2 = 0;
 	double a,b,c,bb4ac;//ax*x+bx+c=0
 	/*x=(-b+-mysqrt(b*b-4ac))/2a*/
-	/*ÏÈÅĞ¶Ïb*b-4ac>0?*/
-	/*>0:Ö±ÏßÓëÔ°Ïà½»*/
-	/*=0:Ö±ÏßÓëÔ°ÏàÇĞ*/
-	/*<0:Ö±ÏßÓëÔ°ÏàÀë¼´Íâ¸î·ê*/
+	/*å…ˆåˆ¤æ–­b*b-4ac>0?*/
+	/*>0:ç›´çº¿ä¸å›­ç›¸äº¤*/
+	/*=0:ç›´çº¿ä¸å›­ç›¸åˆ‡*/
+	/*<0:ç›´çº¿ä¸å›­ç›¸ç¦»å³å¤–å‰²é€¢*/
 
 	if(fabs(x-x0)>fabs(y-y0))
 	{
 		k1 = (y-y0)/(x-x0);
-		//y = k1*x-k1*x0+y0´úÈëÔ²·½³Ì,Çó½âX
+		//y = k1*x-k1*x0+y0ä»£å…¥åœ†æ–¹ç¨‹,æ±‚è§£X
 		temp1 = y0 - k1*x0;
 		a = 1+k1*k1;
 		b = -2*xc0+2*k1*(temp1-yc0);
 		c = pow(xc0,2)  + pow(temp1-yc0,2)-pow(Radius,2);
               bb4ac = pow(b,2)-4*a*c;
-	       if(bb4ac>0.1) //Ïà½»
+	       if(bb4ac>0.1) //ç›¸äº¤
 		{
 			res = 2;
 			*InterX1 = (-b+sqrt(bb4ac))/2/a;
@@ -711,7 +711,7 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 			*InterY1 = k1*(*InterX1)+temp1;
 			*InterY2 = k1*(*InterX2)+temp1;
 		}
-		else if(bb4ac<0.001)  //ÏàÀë
+		else if(bb4ac<0.001)  //ç›¸ç¦»
 		{
 			res = 0;
 		}
@@ -725,13 +725,13 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 	else
 	{
 		k1 = (x-x0)/(y-y0);
-		//y = k1*x-k1*x0+y0´úÈëÔ²·½³Ì,Çó½âX
+		//y = k1*x-k1*x0+y0ä»£å…¥åœ†æ–¹ç¨‹,æ±‚è§£X
 		temp1 = x0 - k1*y0;
 		a = 1+k1*k1;
 		b = -2*yc0+2*k1*(temp1-xc0);
 		c = pow(yc0,2)  + pow(temp1-xc0,2)-pow(Radius,2);
               bb4ac = pow(b,2)-4*a*c;
-	       if(bb4ac>0.1) //Ïà½»
+	       if(bb4ac>0.1) //ç›¸äº¤
 		{
 			res = 2;
 			*InterY1= (-b+sqrt(bb4ac))/2/a;
@@ -739,7 +739,7 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 			*InterX1 = k1*(*InterY1)+temp1;
 			*InterX2 = k1*(*InterY2)+temp1;
 		}
-		else if(bb4ac<0.001)  //ÏàÀë
+		else if(bb4ac<0.001)  //ç›¸ç¦»
 		{
 			res = 0;
 		}
@@ -778,9 +778,9 @@ void Kerf::CircleCheFen(std::vector<GCodeStruct> &GCodeArry)
 		{
 			if(GCodeArryPtrSrc->R>50000)
 			{
-				d_t1 = GCodeArryPtrSrc->X-GCodeArryPtrSrc->I;     // ÓÉÖÕµãÏà¶ÔÆğµã×ø±ê×ª»»³ÉÖÕµãÏà¶ÔÔ²ĞÄ×ø±ê
+				d_t1 = GCodeArryPtrSrc->X-GCodeArryPtrSrc->I;     // ç”±ç»ˆç‚¹ç›¸å¯¹èµ·ç‚¹åæ ‡è½¬æ¢æˆç»ˆç‚¹ç›¸å¯¹åœ†å¿ƒåæ ‡
   			d_t2 = GCodeArryPtrSrc->Y-GCodeArryPtrSrc->J;
-  			d_t3 = GCodeArryPtrSrc->X0 -GCodeArryPtrSrc->I;   // ÓÉÔ²ĞÄÏà¶ÔÆğµã×ø±ê×ª»»³ÉÆğµãÏà¶ÔÔ²ĞÄ×ø±ê
+  			d_t3 = GCodeArryPtrSrc->X0 -GCodeArryPtrSrc->I;   // ç”±åœ†å¿ƒç›¸å¯¹èµ·ç‚¹åæ ‡è½¬æ¢æˆèµ·ç‚¹ç›¸å¯¹åœ†å¿ƒåæ ‡
     		d_t4 = GCodeArryPtrSrc->Y0 -GCodeArryPtrSrc->J;
     		StartAngle= myatan2(d_t4, d_t3);
     		EndAngle= myatan2(d_t2, d_t1);
@@ -956,19 +956,19 @@ int Kerf::IgnoreLittleLine(std::vector<GCodeStruct> &GCodeArry) {
 	return res;
 }
 
-/*¼ÆËãÁ½¸öÖ±ÏßµÄ½»µã×ø±ê
-·µ»ØÖµ:
-	0-Ã»ÓĞ½»µã
-	1- ÓĞ½»µã
+/*è®¡ç®—ä¸¤ä¸ªç›´çº¿çš„äº¤ç‚¹åæ ‡
+è¿”å›å€¼:
+	0-æ²¡æœ‰äº¤ç‚¹
+	1- æœ‰äº¤ç‚¹
 
 int GetLineLineIntersect(Line_t *pPreviousLine,Line_t *pNextLine,point_t *pJointPoint)
 {
-	int res = 0;  //ÎŞ½»µã
+	int res = 0;  //æ— äº¤ç‚¹
 	double k1,k2,Tan1,Tan2;
 	double x_intersect,y_intersect;
-	Tan1=myatan2(pPreviousLine.Y-pPreviousLine.X,pPreviousLine.Y0-pPreviousLine.X0);//µÚÒ»ÌõÏßµÄ½Ç¶È
-	Tan2=myatan2(pNextLine.Y-pNextLine.X,pNextLine.Y0-pNextLine.X0);//µÚ¶şÌõÏßµÄ½Ç¶È
-	if (fabs(tan(Tan1)-tan(Tan2))<0.001)  break;  //Æ½ĞĞÏßÃ»ÓĞ½»µã
+	Tan1=myatan2(pPreviousLine.Y-pPreviousLine.X,pPreviousLine.Y0-pPreviousLine.X0);//ç¬¬ä¸€æ¡çº¿çš„è§’åº¦
+	Tan2=myatan2(pNextLine.Y-pNextLine.X,pNextLine.Y0-pNextLine.X0);//ç¬¬äºŒæ¡çº¿çš„è§’åº¦
+	if (fabs(tan(Tan1)-tan(Tan2))<0.001)  break;  //å¹³è¡Œçº¿æ²¡æœ‰äº¤ç‚¹
 	else
 	{	
 		k1 = (pPreviousLine->Y-pPreviousLine->Y0)/(pPreviousLine->X-pPreviousLine->X0);
@@ -1013,11 +1013,11 @@ double Kerf::GetTangent(GCodeStruct &pG, int StartOrEnd)
 	return Tangent;
 }
 /*
-    ¶ÔÎ´ÓĞÔö¼Ó¸î·ì²¹³¥µÄG ´úÂëÎ´²¹³¥ºóµÄG´úÂë
-    Ö»¶ÔG01, G02,G03½øĞĞ¼ÆËã
-    kerfvalue < 0Îª×ó²¹³¥£¬
-    kerfvalue > 0ÎªÓÒ²¹³¥
-    ·µ»ØÖµ µÄName==M02Îª´íÎó²¹³¥ 
+    å¯¹æœªæœ‰å¢åŠ å‰²ç¼è¡¥å¿çš„G ä»£ç æœªè¡¥å¿åçš„Gä»£ç 
+    åªå¯¹G01, G02,G03è¿›è¡Œè®¡ç®—
+    kerfvalue < 0ä¸ºå·¦è¡¥å¿ï¼Œ
+    kerfvalue > 0ä¸ºå³è¡¥å¿
+    è¿”å›å€¼ çš„Name==M02ä¸ºé”™è¯¯è¡¥å¿ 
 */
 int Kerf::GetAddKerfGCode(GCodeStruct &pNoKerfG, GCodeStruct &AddKerfGCode, double kerfvalue, int dir)
 {
@@ -1124,13 +1124,13 @@ int Kerf::GetAddKerfGCode(GCodeStruct &pNoKerfG, GCodeStruct &AddKerfGCode, doub
 }
 
 /*
-	Ç°Ò»ÌõÏßµÄÄ©¶ËÇĞÏß½Ç¶È beta£¬ºóÒ»ÌõÏßµÄ³õ¶ËÇĞÏß½Ç¶Èalpha
-	alpha-beta>0 ×ó²¹³¥Îª½ØÈ¡£¬ÓÒ²¹³¥ÎªÔö¼ÓG03
-	alpha-beta<0 ×ó²¹³¥ÎªÔö¼ÓG02£¬ÓÒ²¹³¥Îª½ØÈ¡
-	alpha-beta ~=0 Ôò¸ù¾İÒÔÔ­Ôò½ØÈ¡»òÔö¼Ó²»Ö±Ïß¶Î
-	pPreviousLineÎ´²¹³¥µÄÇ°Ò»¾äG ´úÂë
-	pNextLine Î´²¹³¥µÄºóÒ»¾äG ´úÂë
-	AddLine²¹³¥µÄG´úÂë, Name==G01(²¹³¥µÄÊÇĞ¡Ö±Ïß ),G02(×ó²¹³¥),G03(×ó²¹³¥),M02(½ØÈ¡ÁË£¬Ã»ÓĞ²¹³¥)
+	å‰ä¸€æ¡çº¿çš„æœ«ç«¯åˆ‡çº¿è§’åº¦ betaï¼Œåä¸€æ¡çº¿çš„åˆç«¯åˆ‡çº¿è§’åº¦alpha
+	alpha-beta>0 å·¦è¡¥å¿ä¸ºæˆªå–ï¼Œå³è¡¥å¿ä¸ºå¢åŠ G03
+	alpha-beta<0 å·¦è¡¥å¿ä¸ºå¢åŠ G02ï¼Œå³è¡¥å¿ä¸ºæˆªå–
+	alpha-beta ~=0 åˆ™æ ¹æ®ä»¥åŸåˆ™æˆªå–æˆ–å¢åŠ ä¸ç›´çº¿æ®µ
+	pPreviousLineæœªè¡¥å¿çš„å‰ä¸€å¥G ä»£ç 
+	pNextLine æœªè¡¥å¿çš„åä¸€å¥G ä»£ç 
+	AddLineè¡¥å¿çš„Gä»£ç , Name==G01(è¡¥å¿çš„æ˜¯å°ç›´çº¿ ),G02(å·¦è¡¥å¿),G03(å·¦è¡¥å¿),M02(æˆªå–äº†ï¼Œæ²¡æœ‰è¡¥å¿)
 	
 */
 int Kerf::AddOrTrunc(GCodeStruct &pPreviousLine,GCodeStruct &pNextLine, GCodeStruct &pAddLine, int dir)
@@ -1150,7 +1150,7 @@ int Kerf::AddOrTrunc(GCodeStruct &pPreviousLine,GCodeStruct &pNextLine, GCodeStr
 	}
 	if(IsLesser( fabs( fabs(AngleChange)-PI ),0.017))//1//1degree
 	{
-		if(dir == G41) //×ó²¹³¥
+		if(dir == G41) //å·¦è¡¥å¿
 			pAddLine.Name = G02;
 		else
 			pAddLine.Name = G03;
@@ -1163,7 +1163,7 @@ int Kerf::AddOrTrunc(GCodeStruct &pPreviousLine,GCodeStruct &pNextLine, GCodeStr
 	{
 		pAddLine.Name = G01;
 	}*/
-	else if(dir == G41) //×ó²¹³¥
+	else if(dir == G41) //å·¦è¡¥å¿
 	{
 		if(AngleChange>0)
 			pAddLine.Name = M02;
@@ -1252,25 +1252,25 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 
 	enum kerfstatus
 	{
-		NOKERF,  //Î´½¨Á¢ ²¹³¥
-		G41KERF,  //Óöµ½G41£¬µ«²¹³¥ÉĞÃ»ÓĞ½¨Á¢×´Ì¬ 
-		G42KERF,  //Óöµ½G42,µ«²¹³¥ÉĞÎ´½¨Á¢×´Ì¬
-		JUSTSETG41KERF,//¸Õ¸Õ½¨Á¢ G41²¹³¥
-		JUSTSETG42KERF,//¸Õ¸Õ½¨Á¢ g42²¹³¥
-		SETTEDG41KERF, //ÒÑ¾­½¨Á¢ÆğG41²¹³¥
-		SETTEDG42KERF, //ÒÑ¾­½¨Á¢ÆğG42²¹³¥
-		G40KERF  //³·Ïû²¹³¥×´Ì¬
+		NOKERF,  //æœªå»ºç«‹ è¡¥å¿
+		G41KERF,  //é‡åˆ°G41ï¼Œä½†è¡¥å¿å°šæ²¡æœ‰å»ºç«‹çŠ¶æ€ 
+		G42KERF,  //é‡åˆ°G42,ä½†è¡¥å¿å°šæœªå»ºç«‹çŠ¶æ€
+		JUSTSETG41KERF,//åˆšåˆšå»ºç«‹ G41è¡¥å¿
+		JUSTSETG42KERF,//åˆšåˆšå»ºç«‹ g42è¡¥å¿
+		SETTEDG41KERF, //å·²ç»å»ºç«‹èµ·G41è¡¥å¿
+		SETTEDG42KERF, //å·²ç»å»ºç«‹èµ·G42è¡¥å¿
+		G40KERF  //æ’¤æ¶ˆè¡¥å¿çŠ¶æ€
 	};
 	std::vector<GCodeStruct>::iterator GCodeArryPtrSrc = NoKerfFile.begin();
 	std::vector<GCodeStruct>::iterator GCodeArryPtrDes = DesKerFile.begin();
 	GCodeStruct GTemp1,GTemp2;
-	char kerf_on=0;  // 1-½¨Á¢¸î·ì 
+	char kerf_on=0;  // 1-å»ºç«‹å‰²ç¼ 
 	double deltax,deltay,point2x,point2y;
 	double x0,y0,x1,y1,cx,cy;
 	int res,i;
 	unsigned short LastGName,LastKerf=0,RowNum=0;
 	double kerf = param_kerf;
-//	if(graphylimitxy.MaxRadius>50000)//°ë¾¶´óÓÚ50000£¬Ô²»¡²ğ·Ö
+//	if(graphylimitxy.MaxRadius>50000)//åŠå¾„å¤§äº50000ï¼Œåœ†å¼§æ‹†åˆ†
 //	{
 //		CircleCheFen(GfileFloatNoKerf);
 //	}
@@ -1282,7 +1282,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
         if(GCodeArryPtrSrc->Name == G01 ||GCodeArryPtrSrc->Name == G02||GCodeArryPtrSrc->Name == G03)
         {
             if(res==1)
-                UseKerf = 1;// ´úÂëÖĞÓĞ¸î·ì²¹³¥£¬·ñÔòÃ»ÓĞ¸î·ì²¹³¥
+                UseKerf = 1;// ä»£ç ä¸­æœ‰å‰²ç¼è¡¥å¿ï¼Œå¦åˆ™æ²¡æœ‰å‰²ç¼è¡¥å¿
             break;
         }
         else if(GCodeArryPtrSrc->Name == M02)
@@ -1332,7 +1332,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					//*GCodeArryPtrDes = *GCodeArryPtrSrc;
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = G00;  //Ôö¼ÓÒ»¶Î¿Õ×ßÏß
+					GCodeArryPtrDes->Name = G00;  //å¢åŠ ä¸€æ®µç©ºèµ°çº¿
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GCodeArryPtrDes->X0+deltax;
@@ -1344,7 +1344,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					kerf_on = JUSTSETG42KERF;
 			}
 		}
-		else if(GCodeArryPtrSrc->Name==G40)  //È¡Ïû²¹³¥
+		else if(GCodeArryPtrSrc->Name==G40)  //å–æ¶ˆè¡¥å¿
 		{
 			if(kerf_on==SETTEDG41KERF||kerf_on==SETTEDG42KERF)
 			{
@@ -1363,7 +1363,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 			  //*GCodeArryPtrDes = *GCodeArryPtrSrc;
         GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
         GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-				GCodeArryPtrDes->Name = G00;  //Ôö¼ÓÒ»¶Î¿Õ×ßÏß
+				GCodeArryPtrDes->Name = G00;  //å¢åŠ ä¸€æ®µç©ºèµ°çº¿
 				GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 				GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 				GCodeArryPtrDes->X = GCodeArryPtrDes->X0+deltax;
@@ -1399,7 +1399,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 				GCodeArryPtrDes->X = GTemp1.X;
 				GCodeArryPtrDes->Y = GTemp1.Y;
 			}
-			else if(kerf_on == SETTEDG41KERF||kerf_on==SETTEDG42KERF)  //½ö½öÈ·¶¨µ±Ç°ĞĞµÄÆğµã×ø±ê£¬ÖÕµã×ø±ê²ÉÓÃ²¹³¥ºóµÄÄ©µã×ø±ê
+			else if(kerf_on == SETTEDG41KERF||kerf_on==SETTEDG42KERF)  //ä»…ä»…ç¡®å®šå½“å‰è¡Œçš„èµ·ç‚¹åæ ‡ï¼Œç»ˆç‚¹åæ ‡é‡‡ç”¨è¡¥å¿åçš„æœ«ç‚¹åæ ‡
 			{
 				if(kerf_on==SETTEDG42KERF)
 				{
@@ -1411,7 +1411,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					AddOrTrunc(*(GCodeArryPtrSrc-1), *GCodeArryPtrSrc, GTemp1, G41);
 					GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, kerf, G41);
 				}
-				if(GTemp1.Name==M02)  //Ç°ÃæÒ»ĞĞºÍµ±Ç°ĞĞĞèÒª½ØÈ¡
+				if(GTemp1.Name==M02)  //å‰é¢ä¸€è¡Œå’Œå½“å‰è¡Œéœ€è¦æˆªå–
 				{
 					if((GCodeArryPtrSrc-1)->Name==G01)  //case G01 level 2
 					{
@@ -1447,7 +1447,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 						}
 						else
 						{
-						//Ã»ÓĞ½»µã£¬ÔòÑ°ÇóÓëÇ°Ò»ĞĞµÄ½»µã
+						//æ²¡æœ‰äº¤ç‚¹ï¼Œåˆ™å¯»æ±‚ä¸å‰ä¸€è¡Œçš„äº¤ç‚¹
 							/*i=1;
 							do{
 								*pTemp = *(GCodeArryPtrDes-i);
@@ -1485,7 +1485,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 							else if(pTemp->Name==G02 || pTemp->Name==G03)
 							{
 								res = LineCircleIntersect(GTemp2.X0, GTemp2.Y0, GTemp2.X, GTemp2.Y, pTemp->I, pTemp->J, GetRadius(pTemp), &deltax, &deltay, &point2x,&point2y);
-								if(res==0) //Ö±ÏßÓëÔ²Ã»ÓĞ½»µã£¬Ôò²åÈëĞ¡Ö±Ïß
+								if(res==0) //ç›´çº¿ä¸åœ†æ²¡æœ‰äº¤ç‚¹ï¼Œåˆ™æ’å…¥å°ç›´çº¿
 								{
 									Assert("G01/G01/G0203");
 								}
@@ -1547,10 +1547,10 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 
 						}
 					}
-					else if((GCodeArryPtrSrc-1)->Name==G02||(GCodeArryPtrSrc-1)->Name==G03) //case G01 level 2,ÉÏĞĞG02»òG03£¬µ±Ç°ĞĞG01
+					else if((GCodeArryPtrSrc-1)->Name==G02||(GCodeArryPtrSrc-1)->Name==G03) //case G01 level 2,ä¸Šè¡ŒG02æˆ–G03ï¼Œå½“å‰è¡ŒG01
 					{
 						res = LineCircleIntersect(GTemp2.X0, GTemp2.Y0, GTemp2.X, GTemp2.Y, GCodeArryPtrDes->I, GCodeArryPtrDes->J, GetRadius(*GCodeArryPtrDes), &deltax, &deltay, &point2x,&point2y);
-						if(res==0) //Ö±ÏßÓëÔ²Ã»ÓĞ½»µã£¬Ôò²åÈëĞ¡Ö±Ïß
+						if(res==0) //ç›´çº¿ä¸åœ†æ²¡æœ‰äº¤ç‚¹ï¼Œåˆ™æ’å…¥å°ç›´çº¿
 						{
 							//GCodeArryPtrDes++;
 							//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
@@ -1674,7 +1674,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 									cy = (GCodeArryPtrDes)->J;
 								}
 								
-								//?????´Ë´¦ÏÈ¼òµ¥´¦Àí£¬½ØÈ¡Ã»ÓĞµÄÔ²»¡ºöÂÔ£¬Æğµã´ÓÉÏÒ»ĞĞµÄÄ©µã
+								//?????æ­¤å¤„å…ˆç®€å•å¤„ç†ï¼Œæˆªå–æ²¡æœ‰çš„åœ†å¼§å¿½ç•¥ï¼Œèµ·ç‚¹ä»ä¸Šä¸€è¡Œçš„æœ«ç‚¹
 								if(if_point_in_arc(x0,y0,x1,y1,cx,cy,deltax,deltay))
 								{
 									GCodeArryPtrDes->X = deltax;
@@ -1716,24 +1716,24 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 						}
 					}
 				}
-				else if(GTemp1.Name==G01) //Ç°ÃæÒ»ĞĞºÍµ±Ç°ĞĞĞèÒª²åÈëÒ»ÌõĞ¡Ö±Ïß 
+				else if(GTemp1.Name==G01) //å‰é¢ä¸€è¡Œå’Œå½“å‰è¡Œéœ€è¦æ’å…¥ä¸€æ¡å°ç›´çº¿ 
 				{
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = G01;  //²åÈëĞ¡Ö±Ïß
+					GCodeArryPtrDes->Name = G01;  //æ’å…¥å°ç›´çº¿
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X0;
 					GCodeArryPtrDes->Y = GTemp2.Y0;
 
-          //È·¶¨ÏÂÒ»ÌõÏßµÄÆğµã								
+          //ç¡®å®šä¸‹ä¸€æ¡çº¿çš„èµ·ç‚¹								
 					//GCodeArryPtrDes++;    
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = G01;  //²åÈëĞ¡Ö±Ïß
+					GCodeArryPtrDes->Name = G01;  //æ’å…¥å°ç›´çº¿
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X;
@@ -1749,7 +1749,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					if(sqrt(pow((GCodeArryPtrDes-1)->X-GTemp2.X0,2)+pow((GCodeArryPtrDes-1)->Y-GTemp2.Y0,2))<0.2)
 					GCodeArryPtrDes->Name = G01;
 					else
-					GCodeArryPtrDes->Name = G02;  //²åÈëĞ¡Ô²»¡
+					GCodeArryPtrDes->Name = G02;  //æ’å…¥å°åœ†å¼§
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X0;
@@ -1757,12 +1757,12 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					GCodeArryPtrDes->I =GCodeArryPtrSrc->X0;
 					GCodeArryPtrDes->J =GCodeArryPtrSrc->Y0;
 
-					//È·¶¨ÏÂÒ»ÌõÏßµÄÆğµã			
+					//ç¡®å®šä¸‹ä¸€æ¡çº¿çš„èµ·ç‚¹			
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = G01;  //²åÈëĞ¡Ö±Ïß
+					GCodeArryPtrDes->Name = G01;  //æ’å…¥å°ç›´çº¿
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X;
@@ -1779,7 +1779,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					if(sqrt(pow((GCodeArryPtrDes-1)->X-GTemp2.X0,2)+pow((GCodeArryPtrDes-1)->Y-GTemp2.Y0,2))<0.2)
 					GCodeArryPtrDes->Name = G01;
 					else
-					GCodeArryPtrDes->Name = G03;  //²åÈëĞ¡Ô²»¡
+					GCodeArryPtrDes->Name = G03;  //æ’å…¥å°åœ†å¼§
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X0;
@@ -1788,12 +1788,12 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					GCodeArryPtrDes->J =GCodeArryPtrSrc->Y0;
 	
 								
-					//È·¶¨ÏÂÒ»ÌõÏßµÄÆğµã			
+					//ç¡®å®šä¸‹ä¸€æ¡çº¿çš„èµ·ç‚¹			
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = G01;  //²åÈëĞ¡Ö±Ïß
+					GCodeArryPtrDes->Name = G01;  //æ’å…¥å°ç›´çº¿
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X;
@@ -1801,7 +1801,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 		
 								
 				}
-				else if(GTemp1.Name==M00) //Ç°ÃæÒ»ĞĞºÍµ±Ç°ĞĞÆ½µÈÏà½Ó£¬²»ĞèÒª²åÈë»ò½ØÈ¡
+				else if(GTemp1.Name==M00) //å‰é¢ä¸€è¡Œå’Œå½“å‰è¡Œå¹³ç­‰ç›¸æ¥ï¼Œä¸éœ€è¦æ’å…¥æˆ–æˆªå–
 				{
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
@@ -1831,9 +1831,9 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 		}
 		else if( GCodeArryPtrSrc->Name==G02 || GCodeArryPtrSrc->Name==G03)  //case G02/G03 level 1
 		{
-			/*if(kerf_on == G40KERF)  //·ÀÖ¹ÓĞµÄ´úÂëÖ»³öÏÖÒ»´ÎG41»òG42£¬ÖĞ¼ä¶à´Î´©¿×£¬×îºó²ÅÒ»¸öG40
+			/*if(kerf_on == G40KERF)  //é˜²æ­¢æœ‰çš„ä»£ç åªå‡ºç°ä¸€æ¬¡G41æˆ–G42ï¼Œä¸­é—´å¤šæ¬¡ç©¿å­”ï¼Œæœ€åæ‰ä¸€ä¸ªG40
 			{
-			//´Ë¶Î´úÂëºÍif(GCodeArryPtrSrc->Name==G41||GCodeArryPtrSrc->Name==G42)¶Î²î²»¶à
+			//æ­¤æ®µä»£ç å’Œif(GCodeArryPtrSrc->Name==G41||GCodeArryPtrSrc->Name==G42)æ®µå·®ä¸å¤š
 			       
 				
 				if(LastKerf==SETTEDG41KERF|LastKerf==SETTEDG42KERF)
@@ -1843,7 +1843,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 				  Setupkerf(&GTemp1, &deltax, &deltay, kerf, GCodeArryPtrSrc->Name);
 					GCodeArryPtrDes++;
 					*GCodeArryPtrDes = *GCodeArryPtrSrc;
-					GCodeArryPtrDes->Name = G00;  //Ôö¼ÓÒ»¶Î¿Õ×ßÏß
+					GCodeArryPtrDes->Name = G00;  //å¢åŠ ä¸€æ®µç©ºèµ°çº¿
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GCodeArryPtrDes->X0+deltax;
@@ -1871,8 +1871,8 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 				
         GetAddKerfGCode(*GCodeArryPtrSrc, GTemp1, kerf, LastGName);
 				//GCodeArryPtrDes++;
-				//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
-        GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
+				//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
+        GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
         GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 				GCodeArryPtrDes->Name = GCodeArryPtrSrc->Name;
 				GCodeArryPtrDes->X0 = GTemp1.X0;
@@ -1885,7 +1885,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 								
 			}
 			
-			else if(kerf_on == SETTEDG41KERF||kerf_on==SETTEDG42KERF)  //½ö½öÈ·¶¨µ±Ç°ĞĞµÄÆğµã×ø±ê£¬ÖÕµã×ø±ê²ÉÓÃ²¹³¥ºóµÄÄ©µã×ø±ê
+			else if(kerf_on == SETTEDG41KERF||kerf_on==SETTEDG42KERF)  //ä»…ä»…ç¡®å®šå½“å‰è¡Œçš„èµ·ç‚¹åæ ‡ï¼Œç»ˆç‚¹åæ ‡é‡‡ç”¨è¡¥å¿åçš„æœ«ç‚¹åæ ‡
 			{
 				LastGName = GCodeArryPtrSrc->Name;
 				if(kerf_on==SETTEDG42KERF)
@@ -1898,7 +1898,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					AddOrTrunc(*(GCodeArryPtrSrc-1), *GCodeArryPtrSrc, GTemp1, G41);
 					GetAddKerfGCode(*GCodeArryPtrSrc, GTemp2, kerf, G41);
 				}
-				if(GTemp1.Name==M02)  //Ç°ÃæÒ»ĞĞºÍµ±Ç°ĞĞĞèÒª½ØÈ¡
+				if(GTemp1.Name==M02)  //å‰é¢ä¸€è¡Œå’Œå½“å‰è¡Œéœ€è¦æˆªå–
         {
 					if((GCodeArryPtrSrc-1)->Name==G01)
 					{
@@ -1909,14 +1909,14 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 							//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
               GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
               GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-							GCodeArryPtrDes->Name = G01;  //Ã»ÓĞÏà½»Ôò²åÈëĞ¡Ö±Ïß
+							GCodeArryPtrDes->Name = G01;  //æ²¡æœ‰ç›¸äº¤åˆ™æ’å…¥å°ç›´çº¿
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 							GCodeArryPtrDes->X = GTemp2.X0;
 							GCodeArryPtrDes->Y = GTemp2.Y0;
 
 							//GCodeArryPtrDes++;
-							//*GCodeArryPtrDes = GTemp2;  //µ±Ç°ĞĞ
+							//*GCodeArryPtrDes = GTemp2;  //å½“å‰è¡Œ
               GfileFloatKerf.push_back(GTemp2); // Add by ZhanShi
               GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
@@ -1960,14 +1960,14 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 								//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
                 GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
                 GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-								GCodeArryPtrDes->Name = G01;  //Ã»ÓĞÏà½»Ôò²åÈëĞ¡Ö±Ïß
+								GCodeArryPtrDes->Name = G01;  //æ²¡æœ‰ç›¸äº¤åˆ™æ’å…¥å°ç›´çº¿
 								GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 								GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 								GCodeArryPtrDes->X = GTemp2.X0;
 								GCodeArryPtrDes->Y = GTemp2.Y0;
 	
 								//GCodeArryPtrDes++;
-								//*GCodeArryPtrDes = GTemp2;  //µ±Ç°ĞĞ
+								//*GCodeArryPtrDes = GTemp2;  //å½“å‰è¡Œ
                 GfileFloatKerf.push_back(GTemp2); // Add by ZhanShi
                 GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 								GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
@@ -2026,25 +2026,25 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					else if((GCodeArryPtrSrc-1)->Name==G02||(GCodeArryPtrSrc-1)->Name==G03)
 					{
 						res = CircleIntersector(GCodeArryPtrDes->I, GCodeArryPtrDes->J, GetRadius(*GCodeArryPtrDes),GTemp2.I, GTemp2.J,GetRadius(GTemp2), &deltax, &deltay, &point2x,&point2y);
-						if(res==1 || res == 5) //ÏàÀë »ò Ïàº¬
+						if(res==1 || res == 5) //ç›¸ç¦» æˆ– ç›¸å«
 						{
-							//Ôö¼ÓĞ¡Ö±Ïß
+							//å¢åŠ å°ç›´çº¿
 							//GCodeArryPtrDes++;
 							//*GCodeArryPtrDes = *(GCodeArryPtrDes-1);
               GfileFloatKerf.push_back(*GCodeArryPtrDes); // Add by ZhanShi
               GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-							GCodeArryPtrDes->Name = G01;  //²åÈëĞ¡Ô²»¡
+							GCodeArryPtrDes->Name = G01;  //æ’å…¥å°åœ†å¼§
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 							GCodeArryPtrDes->X = GTemp2.X0;
 							GCodeArryPtrDes->Y = GTemp2.Y0;
 	
-							//È·¶¨ÏÂÒ»ÌõÏßµÄÆğµã	
+							//ç¡®å®šä¸‹ä¸€æ¡çº¿çš„èµ·ç‚¹	
 							//GCodeArryPtrDes++;
 							//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
               GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
               GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-							GCodeArryPtrDes->Name = LastGName;  //³­¹ıµ±Ç°Ô²»¡
+							GCodeArryPtrDes->Name = LastGName;  //æŠ„è¿‡å½“å‰åœ†å¼§
 							GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 							GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 							GCodeArryPtrDes->X = GTemp2.X;
@@ -2058,7 +2058,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 						}
 						else if(res==2||res==3)
 						{
-							//ÀëÔ­µã½üµÄ½»µãÎªÕıÈ·µÄ½»µã
+							//ç¦»åŸç‚¹è¿‘çš„äº¤ç‚¹ä¸ºæ­£ç¡®çš„äº¤ç‚¹
 							if(dist(GCodeArryPtrSrc->X0,GCodeArryPtrSrc->Y0,deltax,deltay)<dist(GCodeArryPtrSrc->X0,GCodeArryPtrSrc->Y0,point2x,point2y))
 							{
 								GCodeArryPtrDes->X = deltax;
@@ -2097,7 +2097,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 						}
 						else
 						{
-							//ÀëÔ­µã½üµÄ½»µãÎªÕıÈ·µÄ½»µã
+							//ç¦»åŸç‚¹è¿‘çš„äº¤ç‚¹ä¸ºæ­£ç¡®çš„äº¤ç‚¹
 							if(dist(GCodeArryPtrSrc->X0,GCodeArryPtrSrc->Y0,deltax,deltay)<dist(GCodeArryPtrSrc->X0,GCodeArryPtrSrc->Y0,point2x,point2y))
 							{
 								GCodeArryPtrDes->X = deltax;
@@ -2136,24 +2136,24 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 						}
 					}
 				}
-				else if(GTemp1.Name==G01) //Ç°ÃæÒ»ĞĞºÍµ±Ç°ĞĞĞèÒª²åÈëÒ»ÌõĞ¡Ö±Ïß 
+				else if(GTemp1.Name==G01) //å‰é¢ä¸€è¡Œå’Œå½“å‰è¡Œéœ€è¦æ’å…¥ä¸€æ¡å°ç›´çº¿ 
         {
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = G01;  //²åÈëĞ¡Ö±Ïß
+					GCodeArryPtrDes->Name = G01;  //æ’å…¥å°ç›´çº¿
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X0;
 					GCodeArryPtrDes->Y = GTemp2.Y0;
 
-					//È·¶¨ÏÂÒ»ÌõÏßµÄÆğµã			
+					//ç¡®å®šä¸‹ä¸€æ¡çº¿çš„èµ·ç‚¹			
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = LastGName;  //²åÈëµ±Ç°G02 »òG03
+					GCodeArryPtrDes->Name = LastGName;  //æ’å…¥å½“å‰G02 æˆ–G03
 					GCodeArryPtrDes->X0 = GTemp2.X0;
 					GCodeArryPtrDes->Y0 = GTemp2.Y0;
 					GCodeArryPtrDes->X = GTemp2.X;
@@ -2169,7 +2169,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = G02;  //²åÈëĞ¡Ô²»¡
+					GCodeArryPtrDes->Name = G02;  //æ’å…¥å°åœ†å¼§
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X0;
@@ -2178,12 +2178,12 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					GCodeArryPtrDes->J =GCodeArryPtrSrc->Y0;
 	
 								
-					//È·¶¨ÏÂÒ»ÌõÏßµÄÆğµã
+					//ç¡®å®šä¸‹ä¸€æ¡çº¿çš„èµ·ç‚¹
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = LastGName;  //²åÈëµ±Ç°G02»òG03
+					GCodeArryPtrDes->Name = LastGName;  //æ’å…¥å½“å‰G02æˆ–G03
 					GCodeArryPtrDes->X0 = GTemp2.X0;
 					GCodeArryPtrDes->Y0 = GTemp2.Y0;
 					GCodeArryPtrDes->X = GTemp2.X;
@@ -2199,7 +2199,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = G03;  //²åÈëĞ¡Ô²»¡
+					GCodeArryPtrDes->Name = G03;  //æ’å…¥å°åœ†å¼§
 					GCodeArryPtrDes->X0 = (GCodeArryPtrDes-1)->X;
 					GCodeArryPtrDes->Y0 = (GCodeArryPtrDes-1)->Y;
 					GCodeArryPtrDes->X = GTemp2.X0;
@@ -2208,12 +2208,12 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 					GCodeArryPtrDes->J =GCodeArryPtrSrc->Y0;
 
 								
-					//È·¶¨ÏÂÒ»ÌõÏßµÄÆğµã
+					//ç¡®å®šä¸‹ä¸€æ¡çº¿çš„èµ·ç‚¹
 					//GCodeArryPtrDes++;
 					//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
           GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
           GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-					GCodeArryPtrDes->Name = LastGName;  //²åÈëµ±Ç°G02»òG03
+					GCodeArryPtrDes->Name = LastGName;  //æ’å…¥å½“å‰G02æˆ–G03
 					GCodeArryPtrDes->X0 = GTemp2.X0;
 					GCodeArryPtrDes->Y0 = GTemp2.Y0;
 					GCodeArryPtrDes->X = GTemp2.X;
@@ -2223,12 +2223,12 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 
 								
 				}
-				else if(GTemp1.Name==M00) //Ç°ÃæÒ»ĞĞºÍµ±Ç°ĞĞÆ½µÈÏà½Ó£¬²»ĞèÒª²åÈë»ò½ØÈ¡
+				else if(GTemp1.Name==M00) //å‰é¢ä¸€è¡Œå’Œå½“å‰è¡Œå¹³ç­‰ç›¸æ¥ï¼Œä¸éœ€è¦æ’å…¥æˆ–æˆªå–
         {
 					if (fabs((GCodeArryPtrDes)->X-GTemp2.X0)>0.1||
 					    fabs((GCodeArryPtrDes)->Y-GTemp2.Y0)>0.1)
 					{
-						//ĞèÒª²åÈëÖ±Ïß
+						//éœ€è¦æ’å…¥ç›´çº¿
             GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
             GCodeArryPtrDes = GfileFloatKerf.end() - 1;
 						GCodeArryPtrDes->Name = G01;  
@@ -2237,7 +2237,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 						GCodeArryPtrDes->X = GTemp2.X0;
 						GCodeArryPtrDes->Y = GTemp2.Y0;
 						
-						//ÔÙ°Ñµ±Ç°Ô²»¡¼ÓÈë½øÀ´
+						//å†æŠŠå½“å‰åœ†å¼§åŠ å…¥è¿›æ¥
             //GCodeArryPtrDes++;
 						//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
             GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
@@ -2257,7 +2257,7 @@ void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
 						//*GCodeArryPtrDes = *(GCodeArryPtrSrc);
             GfileFloatKerf.push_back(*GCodeArryPtrSrc); // Add by ZhanShi
 	          GCodeArryPtrDes = GfileFloatKerf.end() - 1;
-						GCodeArryPtrDes->X0 = GTemp2.X0;//²»È¡ÉÏÒ»ĞĞµÄÄ©µã×ø±ê£¬ÊÇÒòÎªÓĞÊ±Æğµã×ø±êÆ«Ò»µã¾Í»áµ¼ÖÂÒ»¸öÕûÔ²±ä³ÉĞ¡Ô²»¡
+						GCodeArryPtrDes->X0 = GTemp2.X0;//ä¸å–ä¸Šä¸€è¡Œçš„æœ«ç‚¹åæ ‡ï¼Œæ˜¯å› ä¸ºæœ‰æ—¶èµ·ç‚¹åæ ‡åä¸€ç‚¹å°±ä¼šå¯¼è‡´ä¸€ä¸ªæ•´åœ†å˜æˆå°åœ†å¼§
 						GCodeArryPtrDes->Y0 = GTemp2.Y0;
 						GCodeArryPtrDes->X = GTemp2.X;
 						GCodeArryPtrDes->Y = GTemp2.Y;
