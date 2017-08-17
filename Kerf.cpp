@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Fangling Software Co., Ltd. All Rights Reserved.
+// Copyright 2016 Fangling Software Co., Ltd. All Rights Reserved.
 // Author: shizhan-shelly@hotmail.com (Zhan Shi)
 
 #include "Kerf.h"
@@ -16,6 +16,7 @@ typedef enum _kerfstatus {
 	SETTEDG41KERF, //已经建立起G41补偿
 	SETTEDG42KERF, //已经建立起G42补偿
 	G40KERF  //撤消补偿状态
+
 } kerfstatus;
 
 const double INFINITESIMAL = 0.00001;//0.0000001;
@@ -136,11 +137,10 @@ ErrNo                      : 代码正常
 ERR_G_CODE_POSITION        : G代码绝对位置偏差过大
 ERR_G_CODE_WHOLE_CIRCLE    : 整圆出错，无法校正
 ERR_G_CODE_ARC_CENTER      : 圆弧精度误差较大，圆心无法校正
-
 **********************************************************************************/
-int check_gcode_after_kerf (GCodeARRAY_STRUCT *GCodeArryPtr)
+int check_gcode_after_kerf (GCodeStruct *GCodeArryPtr)
 {
-  GCodeARRAY_STRUCT *GCodeArryPtrNext;
+  GCodeStruct *GCodeArryPtrNext;
 
   //1. 检查并恢复整圆
   if (calibrate_whole_circle (GfileFloatKerf) != 0)
@@ -167,128 +167,55 @@ Ptr: G代码结构体指针
 加割缝，该函数会检查整圆标记是否有效，如果整圆标记有效，并且圆弧的角度小于5度，则认为
 整圆变成了小圆弧，
 **************************************************************************************************/
-int calibrate_whole_circle (GCodeARRAY_STRUCT *Ptr)
-{
-GCodeARRAY_STRUCT *PtrNext;
-static int debug_trace = 0;
-static double angle_err = 0;
-double small_arc_angle = 5.0/180.0*PI; //阈值角度为5度 
-int err_whole_circle = 0;
+int calibrate_whole_circle (GCodeStruct *Ptr) {
+  GCodeStruct *PtrNext;
+  static int debug_trace = 0;
+  static double angle_err = 0;
+  double small_arc_angle = 5.0/180.0*PI; //阈值角度为5度 
+  int err_whole_circle = 0;
 PtrNext = Ptr + 1;
-while (Ptr->Name != M02 && PtrNext->Name != M02)
-{ 
-if (Ptr > &GfileFloatKerf[5572])
-{
-debug_trace++;
+while (Ptr->Name != M02 && PtrNext->Name != M02) { 
+  if (Ptr > &GfileFloatKerf[5572]) {
+    debug_trace++;
+  } else if (Ptr > &GfileFloatKerf[1152]) {
+    debug_trace++;
+  }
+  PtrNext = Ptr + 1;
+  if (is_whole_circle_marked (Ptr) == 1) { //整圆
+    calculate_arc_length_radius_and_angle (Ptr); //计算圆弧角度
+    //整圆补偿后，圆弧角度小于5度，则认为补偿出错，恢复圆弧, 恢复圆弧时，下一段代码如果是圆弧，则会对圆弧的精度产生影响
+    if (Ptr->Name == G02 && IsLesser (Ptr->StartAngle - Ptr->EndAngle, small_arc_angle)) {
+      angle_err = Ptr->StartAngle - Ptr->EndAngle;
+      if (PtrNext->Name == G00 || PtrNext->Name == G01 || PtrNext->Name == G02 || PtrNext->Name == G03 ||
+          PtrNext->Name == G26 || PtrNext->Name == G27 || PtrNext->Name == G28) {
+
+    Ptr->X = Ptr->X0;
+    Ptr->Y = Ptr->Y0;
+    PtrNext->X0 = Ptr->X;
+    PtrNext->Y0 = Ptr->Y;
+    err_whole_circle++;
+  } else {
+    return -1;
+  }
+} else if (Ptr->Name == G03 && IsLesser (Ptr->EndAngle - Ptr->StartAngle, small_arc_angle)) {
+  angle_err = Ptr->EndAngle - Ptr->StartAngle;
+  if (PtrNext->Name == G00 || PtrNext->Name == G01 || PtrNext->Name == G02 || PtrNext->Name == G03 ||
+      PtrNext->Name == G26 || PtrNext->Name == G27 || PtrNext->Name == G28) {
+         Ptr->X = Ptr->X0;
+         Ptr->Y = Ptr->Y0;
+         PtrNext->X0 = Ptr->X;
+         PtrNext->Y0 = Ptr->Y;
+         err_whole_circle++;
+	     } else {
+        return -1;
+	     }
+     }
+   }
+    Ptr++;
+    PtrNext = Ptr + 1;
+  }
+  return 0;
 }
-else if (Ptr > &GfileFloatKerf[1152])
-{
-debug_trace++;
-}
-
-PtrNext = Ptr + 1;
-if (is_whole_circle_marked (Ptr) == 1) //整圆
-{
-calculate_arc_length_radius_and_angle (Ptr); //计算圆弧角度
-
-
-
-//整圆补偿后，圆弧角度小于5度，则认为补偿出错，恢复圆弧, 恢复圆弧时，下一段代码如果是圆弧，则会对圆弧的精度产生影响
-
-if (Ptr->Name == G02 && IsLesser (Ptr->StartAngle - Ptr->EndAngle, small_arc_angle))
-
-{
-
-
-angle_err = Ptr->StartAngle - Ptr->EndAngle;
-
-if (PtrNext->Name == G00 || PtrNext->Name == G01 || PtrNext->Name == G02 || PtrNext->Name == G03 ||
-
-
-PtrNext->Name == G26 || PtrNext->Name == G27 || PtrNext->Name == G28)
-
-{
-
-Ptr->X = Ptr->X0;
-
-Ptr->Y = Ptr->Y0;
-
-PtrNext->X0 = Ptr->X;
-
-PtrNext->Y0 = Ptr->Y;
-
-
-
-
-
-err_whole_circle++;
-
-}
-
-else
-
-return -1;
-
-
-}
-
-else if (Ptr->Name == G03 && IsLesser (Ptr->EndAngle - Ptr->StartAngle, small_arc_angle))
-
-{
-
-
-angle_err = Ptr->EndAngle - Ptr->StartAngle;
-
-if (PtrNext->Name == G00 || PtrNext->Name == G01 || PtrNext->Name == G02 || PtrNext->Name == G03 ||
-
-
-PtrNext->Name == G26 || PtrNext->Name == G27 || PtrNext->Name == G28)
-
-{
-
-Ptr->X = Ptr->X0;
-
-Ptr->Y = Ptr->Y0;
-
-PtrNext->X0 = Ptr->X;
-
-PtrNext->Y0 = Ptr->Y;
-
-
-
-
-err_whole_circle++;
-
-
-}
-
-else
-
-return -1;
-
-
-}
-
-}
-
-
-
-
-Ptr++;
-
-PtrNext = Ptr + 1;
-
-}
-
-
-
-
-return 0;
-
-}
-
-
-
 
 /**************************************************************************************************
 
@@ -1689,6 +1616,96 @@ int Kerf::Canclekerf(GCodeStruct &pGcode, double &dx, double &dy, double kerfvla
 		dy = kerfvlaue*sin(QieXianAngle1+_1p2PI);
 	}
   return 0;
+}
+
+/*************************************************************************************
+设定G代码的起始坐标
+*************************************************************************************/
+#define gcode_set_start_pos(Ptr, xs, ys)			(Ptr->X0 = xs, Ptr->Y0 = ys)
+
+/*************************************************************************************
+设定G代码的末点坐标
+*************************************************************************************/
+#define gcode_set_end_pos(Ptr, xe, ye)				(Ptr->X = xe, Ptr->Y = ye)
+
+/*************************************************************************************
+设定G代码的圆心坐标
+*************************************************************************************/
+#define gcode_set_IJ_pos(Ptr, xe, ye)				(Ptr->I = xe, Ptr->J = ye)
+
+/*************************************************************************************
+获取下一个割缝G代码的缓冲区
+起点默认设置为上行代码的末点
+*************************************************************************************/
+#define gcode_get_next_kerf_buf(PtrDst, PtrSrc)		(PtrDst++, *PtrDst = *PtrSrc, PtrDst->X0 = (PtrDst-1)->X, PtrDst->Y0 = (PtrDst-1)->Y)
+/*************************************************************************************
+设置G代码名称
+*************************************************************************************/
+#define gcode_set_name(Ptr, gcode_name)				(Ptr->Name = gcode_name)
+
+/*************************************************************************************
+设置下一个割缝G代码
+*************************************************************************************/
+#define gcode_set_next_kerf(PtrDst, PtrSrc, Name, Xe, Ye) \
+	gcode_get_next_kerf_buf(PtrDst, PtrSrc);\
+	gcode_set_name(PtrDst, Name);\
+	gcode_set_end_pos(PtrDst, Xe, Ye);
+
+/*************************************************************************************
+函数功能: 向前设定G代码的末点坐标,直到遇到G01G02G03停止
+参数:
+	PtrDst: 割缝数组指针
+	xe,ye: 末点坐标
+说明: 中间遇到G41/G42, 或者起点末点坐标不相等时，则返回错误
+*************************************************************************************/
+GCodeARRAY_STRUCT* gcode_set_end_pos_until_G01G02G03 (GCodeARRAY_STRUCT *Ptr, double xe, double ye)
+{
+	while (1)
+	{
+		if (Ptr->Name == G01 || Ptr->Name == G02 || Ptr->Name == G03)
+			break;
+		
+		if (Ptr->Name == G41 || Ptr->Name == G42)
+			return NULL;
+
+		if (!IsEqual (Ptr->X0, Ptr->X) || !IsEqual (Ptr->Y0, Ptr->Y))
+			return NULL;
+
+		Ptr->X0 = Ptr->X = xe;
+		Ptr->Y0 = Ptr->Y = ye;
+
+		Ptr--;
+		if (Ptr == GfileFloatKerf || Ptr == GfileFloatNoKerf)
+			return NULL;
+			}
+
+	gcode_set_end_pos(Ptr, xe, ye);			//
+	return Ptr;
+}
+
+/*************************************************************************************
+函数功能: 获取上一条有效的需要加割缝的G代码指令
+返回值: 
+	有效的G代码指针，NULL: 无效
+*************************************************************************************/
+GCodeARRAY_STRUCT *kerf_get_previous_line_gcode (GCodeARRAY_STRUCT *Ptr)
+{
+	GCodeARRAY_STRUCT *PtrPreviousLine;
+	
+	PtrPreviousLine = Ptr;
+	while (1)
+	{
+		if (PtrPreviousLine->Name == G01 || PtrPreviousLine->Name == G02 || PtrPreviousLine->Name == G03)
+			return PtrPreviousLine;
+		if (PtrPreviousLine->Name == G41 || PtrPreviousLine->Name == G42)
+			return NULL;
+
+		PtrPreviousLine--;
+		if (PtrPreviousLine == GfileFloatNoKerf || PtrPreviousLine == GfileFloatKerf)
+			return NULL;
+	}
+
+	return NULL;
 }
 
 //#define  Assert(p) GUI_DispStringAt(p,col[30],row[10])
