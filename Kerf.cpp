@@ -7,9 +7,16 @@
 
 #include "GCodeParse.h"
 
-//GCodeStruct GfileFloatKerf[80000]; // 有割缝的浮点型切割代码
-//GCodeStruct GfileFloatNoKerf[80000]; // 没有割缝的浮点型切割代码
-//GraphyLimit graphylimitxy;
+typedef enum _kerfstatus {
+	NOKERF,  //未建立 补偿
+	G41KERF,  //遇到G41，但补偿尚没有建立状态 
+	G42KERF,  //遇到G42,但补偿尚未建立状态
+	JUSTSETG41KERF,//刚刚建立 G41补偿
+	JUSTSETG42KERF,//刚刚建立 g42补偿
+	SETTEDG41KERF, //已经建立起G41补偿
+	SETTEDG42KERF, //已经建立起G42补偿
+	G40KERF  //撤消补偿状态
+} kerfstatus;
 
 const double INFINITESIMAL = 0.00001;//0.0000001;
 const double PI = 3.14159265358979323846264338327950288419716939937510;
@@ -29,7 +36,6 @@ unsigned char IsZero(double x) {
 double fpmin(double x, double y) {
   return x < y ? x : y;
 }
-
 
 double fpmax(double x, double y) {
   return x > y ? x : y;
@@ -120,6 +126,322 @@ int circle_intersect(Circle_t A, Circle_t B, Point_t *ia, Point_t *ib) {
     }
   }
   return 4; // 2个交点
+}
+
+/**********************************************************************************
+检查加割缝后的G代码
+
+返回值 :  
+ErrNo                      : 代码正常
+ERR_G_CODE_POSITION        : G代码绝对位置偏差过大
+ERR_G_CODE_WHOLE_CIRCLE    : 整圆出错，无法校正
+ERR_G_CODE_ARC_CENTER      : 圆弧精度误差较大，圆心无法校正
+
+**********************************************************************************/
+int check_gcode_after_kerf (GCodeARRAY_STRUCT *GCodeArryPtr)
+{
+  GCodeARRAY_STRUCT *GCodeArryPtrNext;
+
+  //1. 检查并恢复整圆
+  if (calibrate_whole_circle (GfileFloatKerf) != 0)
+  {
+    return ERR_G_CODE_WHOLE_CIRCLE; //整圆出错，无法校正
+  }
+
+  //2. 检查g代码精度
+  return calibrate_gcode (GfileFloatKerf);
+}
+
+/**************************************************************************************************
+函数功能: 检查并恢复整圆
+
+参数:
+Ptr: G代码结构体指针
+
+返回值 :
+0 : 正常恢复
+-1: 无法恢复整圆
+
+说明: 
+该函数用于校正加割缝后变成小圆弧的整圆。加割缝前对整圆进行标记，
+加割缝，该函数会检查整圆标记是否有效，如果整圆标记有效，并且圆弧的角度小于5度，则认为
+整圆变成了小圆弧，
+**************************************************************************************************/
+int calibrate_whole_circle (GCodeARRAY_STRUCT *Ptr)
+{
+GCodeARRAY_STRUCT *PtrNext;
+static int debug_trace = 0;
+static double angle_err = 0;
+double small_arc_angle = 5.0/180.0*PI; //阈值角度为5度 
+int err_whole_circle = 0;
+PtrNext = Ptr + 1;
+while (Ptr->Name != M02 && PtrNext->Name != M02)
+{ 
+if (Ptr > &GfileFloatKerf[5572])
+{
+debug_trace++;
+}
+else if (Ptr > &GfileFloatKerf[1152])
+{
+debug_trace++;
+}
+
+PtrNext = Ptr + 1;
+if (is_whole_circle_marked (Ptr) == 1) //整圆
+{
+calculate_arc_length_radius_and_angle (Ptr); //计算圆弧角度
+
+
+
+//整圆补偿后，圆弧角度小于5度，则认为补偿出错，恢复圆弧, 恢复圆弧时，下一段代码如果是圆弧，则会对圆弧的精度产生影响
+
+if (Ptr->Name == G02 && IsLesser (Ptr->StartAngle - Ptr->EndAngle, small_arc_angle))
+
+{
+
+
+angle_err = Ptr->StartAngle - Ptr->EndAngle;
+
+if (PtrNext->Name == G00 || PtrNext->Name == G01 || PtrNext->Name == G02 || PtrNext->Name == G03 ||
+
+
+PtrNext->Name == G26 || PtrNext->Name == G27 || PtrNext->Name == G28)
+
+{
+
+Ptr->X = Ptr->X0;
+
+Ptr->Y = Ptr->Y0;
+
+PtrNext->X0 = Ptr->X;
+
+PtrNext->Y0 = Ptr->Y;
+
+
+
+
+
+err_whole_circle++;
+
+}
+
+else
+
+return -1;
+
+
+}
+
+else if (Ptr->Name == G03 && IsLesser (Ptr->EndAngle - Ptr->StartAngle, small_arc_angle))
+
+{
+
+
+angle_err = Ptr->EndAngle - Ptr->StartAngle;
+
+if (PtrNext->Name == G00 || PtrNext->Name == G01 || PtrNext->Name == G02 || PtrNext->Name == G03 ||
+
+
+PtrNext->Name == G26 || PtrNext->Name == G27 || PtrNext->Name == G28)
+
+{
+
+Ptr->X = Ptr->X0;
+
+Ptr->Y = Ptr->Y0;
+
+PtrNext->X0 = Ptr->X;
+
+PtrNext->Y0 = Ptr->Y;
+
+
+
+
+err_whole_circle++;
+
+
+}
+
+else
+
+return -1;
+
+
+}
+
+}
+
+
+
+
+Ptr++;
+
+PtrNext = Ptr + 1;
+
+}
+
+
+
+
+return 0;
+
+}
+
+
+
+
+/**************************************************************************************************
+
+函数功能: 清除整圆标记
+
+**************************************************************************************************/
+
+
+void whole_circle_mark_clear (GCodeARRAY_STRUCT *Ptr)
+
+{
+
+if (Ptr->Name == G02 || Ptr->Name == G03)
+
+{
+
+Ptr->AngleRatio = 0;
+
+}
+
+}
+
+
+
+
+
+/**************************************************************************************************
+
+函数功能: 判断整圆标记是否存在
+
+
+
+
+返回值 :
+
+1 : 是整圆
+
+0 : 不是整圆
+
+**************************************************************************************************/
+
+
+int is_whole_circle_marked (GCodeARRAY_STRUCT *Ptr)
+
+{
+
+if ((Ptr->Name == G02 || Ptr->Name == G03) && IsEqual (Ptr->AngleRatio, 1))
+
+{
+
+return 1;
+
+}
+
+
+
+
+return 0;
+
+}
+
+
+
+
+
+/**************************************************************************************************
+
+函数功能: 标记整圆
+
+**************************************************************************************************/
+
+void whole_circle_mark (GCodeARRAY_STRUCT *Ptr)
+
+
+{
+
+//计算圆
+
+if (Ptr->Name == G02 || Ptr->Name == G03)
+
+{
+
+if (IsEqual(Ptr->X0, Ptr->X) && IsEqual (Ptr->Y0, Ptr->Y))
+
+Ptr->AngleRatio = 1;
+
+else
+
+Ptr->AngleRatio = 0;
+
+}
+
+}
+
+
+
+
+
+
+
+
+
+
+/**************************************************************************************************
+
+函数功能: 检查圆弧加割缝半径是否过小
+
+
+
+
+
+
+参数:
+
+kerf_dir  : 割缝方向 G41:左割缝，G42:右割缝
+
+    kerf_value: 割缝值
+
+    GCodePtr  : 圆弧代码
+
+
+
+
+返回值:
+
+     0: 正常
+
+    -1: 圆弧半径过小
+
+**************************************************************************************************/
+
+
+int is_arc_radius_vaild_for_kerf (int kerf_dir, double kerf_value, GCodeARRAY_STRUCT *GCodePtr)
+
+{
+
+    if ((GCodePtr->Name == G02 && kerf_dir == G42) ||
+
+        (GCodePtr->Name == G03 && kerf_dir == G41))
+
+    {
+
+
+        if (sqrt(pow(GCodePtr->X0-GCodePtr->I,2)+pow(GCodePtr->Y0-GCodePtr->J,2)) <= kerf_value)
+
+            return -1;
+
+    }
+
+    
+
+    return 0;
+
 }
 
 /**********************************************************/
@@ -254,12 +576,27 @@ int if_in_arc_cw(double ang_temp,double ang_str,double ang_end,int lead_type)
 
   return 1;
 }
+
 /*
 	x0,y0 start(x,y)
 	x1,y1 end(x,y)
 	cx,cy end(x,y)
 	px,py test(x,y)
 */
+/**********************************************************************************************************
+函数功能: 判断点是否在逆时针的圆弧上, 注意，该函数只能用来判断逆时针的圆弧，如果圆弧是顺时针的，则需要调换起点和末点的坐标
+
+参数:
+    x0,y0 : 逆时针圆弧的起点坐标
+    x1,y1 : 逆时针圆弧的末点坐标
+    cx,cy : 逆时针圆弧的圆心坐标
+
+    px,py : 测试点的坐标
+
+返回值:
+        1 : 点在圆弧上
+        0 : 点不在圆弧上
+**********************************************************************************************************/
 int if_point_in_arc(double x0,double y0, double x1,double y1, double cx,double cy,double px,double py)
 {
 	double ang_str,ang_end,ang_pt;
@@ -311,6 +648,32 @@ int if_point_in_arc(double x0,double y0, double x1,double y1, double cx,double c
 	
 }
 
+/**********************************************************************************************************
+函数功能: 判断点是否在圆弧上
+
+参数:
+    px,py : 测试点的坐标
+    
+    arc_gcode_name: 圆弧G代码指令 G02:顺时针圆弧  G03:逆时针圆弧
+    x0,y0 : 圆弧的起点坐标
+    x1,y1 : 圆弧的末点坐标
+    cx,cy : 圆弧的圆心坐标
+
+返回值:
+        1 : 点在圆弧上
+        0 : 点不在圆弧上
+**********************************************************************************************************/
+int is_point_in_arc (double px,double py, int arc_gcode_name, double x0,double y0, double x1,double y1, double cx,double cy)
+{
+    if (arc_gcode_name == G02)
+    {
+        return if_point_in_arc (x1, y1, x0, y0, cx, cy, px, py);
+    }
+    else
+    {
+        return if_point_in_arc (x0, y0, x1, y1, cx, cy, px, py);
+    }
+}
 
 /*
 int if_in_line(double ang1x,double ang1y,double ang2x,double ang2y,double ang3x,double ang3y)
@@ -327,6 +690,20 @@ int if_in_line(double ang1x,double ang1y,double ang2x,double ang2y,double ang3x,
 		return 1;
 }*/
 
+/******************************************************************************************
+函数功能:判断点是否在线段范围内，
+注意    :该函数不判断当前点是否在直线上
+
+参数: 
+    pointx,pointy : 测试点的坐标
+    
+    x0,y0 : 线段的起点坐标
+    x,y   : 线段的末点坐标
+
+返回值:
+    1  : 点在线段范围内
+    0  : 点不在线段范围内
+******************************************************************************************/
 int point_in_line(double pointx,double pointy,double x0,double y0,double x,double y)
 {
 	double R,R2;
@@ -501,6 +878,22 @@ double mysqrt(double x)
   0 平行
   1 有交点
 */
+/***********************************************************************************************
+函数功能: 判断两条直线位置关系
+
+参数:
+    x0,y0 : 第一条线段的起点
+    x1,y1 : 第一条线段的末点
+    x2,y2 : 第二条线段的起点
+    x3,y3 : 第二条线段的末点
+
+    InterX, InterY : 交点坐标 (只有在返回值为1时才有效，交点坐标不一定在线段上，还需要进一步判断)
+
+返回值:
+    0 : 平行
+    1 : 有交点
+    -1: 错误
+***********************************************************************************************/
 int TwoLineIsIntersect(double   x0,   double   y0,   double   x1,   double   y1,   double   x2,   double   y2,   double   x3,   double   y3,   double   *InterX,   double   *InterY)   
 { //两条线段是否相交X0X1   AND   X1X2   
   //double   x,   y;   
@@ -681,6 +1074,23 @@ int TwoLineIsIntersect(double   x0,   double   y0,   double   x1,   double   y1,
 		2-二两个交点，即相交
 		
 */
+/************************************************************************************************
+函数功能: 计算线段与圆弧之间的位置关系
+
+参数: 
+    x0,y0  : 线段起点坐标
+    x,y    : 线段末点坐标
+    xc0,yc0: 圆弧圆心坐标
+    Radius : 圆弧半径
+    InterX1,InterY1: 线段所在的直线与圆弧的第一个交点 (返回值为1或2时有效)
+    InterX2,InterY2: 线段所在的直线与圆弧的第二个交点
+ (返回值为1或2时有效)
+
+返回值:
+    0 : 没有交点，相离
+    1 : 有一个交点，相切
+    2 : 有两个交点，相交
+************************************************************************************************/
 int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double yc0,double Radius,double *InterX1,double *InterY1,double *InterX2,double *InterY2)
 {
 	int res=0;
@@ -694,7 +1104,7 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 	/*=0:直线与园相切*/
 	/*<0:直线与园相离即外割逢*/
 
-	if(fabs(x-x0)>fabs(y-y0))
+  if (IsGreater (fabs(x-x0), fabs(y-y0)))
 	{
 		k1 = (y-y0)/(x-x0);
 		//y = k1*x-k1*x0+y0代入圆方程,求解X
@@ -703,7 +1113,8 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 		b = -2*xc0+2*k1*(temp1-yc0);
 		c = pow(xc0,2)  + pow(temp1-yc0,2)-pow(Radius,2);
               bb4ac = pow(b,2)-4*a*c;
-	       if(bb4ac>0.1) //相交
+
+    if (IsGreater(bb4ac, 0)) //相交
 		{
 			res = 2;
 			*InterX1 = (-b+sqrt(bb4ac))/2/a;
@@ -711,7 +1122,7 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 			*InterY1 = k1*(*InterX1)+temp1;
 			*InterY2 = k1*(*InterX2)+temp1;
 		}
-		else if(bb4ac<0.001)  //相离
+		else if (IsLesser(bb4ac, 0)) //相离
 		{
 			res = 0;
 		}
@@ -731,7 +1142,7 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 		b = -2*yc0+2*k1*(temp1-xc0);
 		c = pow(yc0,2)  + pow(temp1-xc0,2)-pow(Radius,2);
               bb4ac = pow(b,2)-4*a*c;
-	       if(bb4ac>0.1) //相交
+	  if (IsGreater(bb4ac, 0)) //相交
 		{
 			res = 2;
 			*InterY1= (-b+sqrt(bb4ac))/2/a;
@@ -739,7 +1150,7 @@ int LineCircleIntersect(double x0,double y0,double x,double y, double xc0,double
 			*InterX1 = k1*(*InterY1)+temp1;
 			*InterX2 = k1*(*InterY2)+temp1;
 		}
-		else if(bb4ac<0.001)  //相离
+		else if (IsLesser(bb4ac, 0)) //相离
 		{
 			res = 0;
 		}
@@ -1012,6 +1423,7 @@ double Kerf::GetTangent(GCodeStruct &pG, int StartOrEnd)
 	}
 	return Tangent;
 }
+
 /*
     对未有增加割缝补偿的G 代码未补偿后的G代码
     只对G01, G02,G03进行计算
@@ -1019,6 +1431,19 @@ double Kerf::GetTangent(GCodeStruct &pG, int StartOrEnd)
     kerfvalue > 0为右补偿
     返回值 的Name==M02为错误补偿 
 */
+/***************************************************************************************************
+函数功能: 计算给定G代码加割缝之后的路径
+
+参数:
+    pNoKerfG     : 待加割缝的G代码
+    AddKerfGCode : 加割缝之后的G代码
+    kerfvalue    : 待加的割缝值
+    dir          : 割缝方向 G41:左割缝，G42:右割缝
+返回值:
+    0 : 正常
+    1 : 给定割缝值为0
+    2 : 圆弧半径过小，无法加割缝
+***************************************************************************************************/
 int Kerf::GetAddKerfGCode(GCodeStruct &pNoKerfG, GCodeStruct &AddKerfGCode, double kerfvalue, int dir)
 {
 	//GCodeStruct KerfGCode;
@@ -1027,7 +1452,9 @@ int Kerf::GetAddKerfGCode(GCodeStruct &pNoKerfG, GCodeStruct &AddKerfGCode, doub
 	AddKerfGCode.Name = M02;
 	if(fabs(kerfvalue)<EP)
 		return 1;
-	
+
+  //TODO(anyone): 圆弧半径过小，无法加割缝
+	AddKerfGCode->AngleRatio = pNoKerfG->AngleRatio;
 	if(pNoKerfG.Name==G01)
 	{
 		LastTangent = myatan2(pNoKerfG.Y-pNoKerfG.Y0, pNoKerfG.X-pNoKerfG.X0);
@@ -1123,7 +1550,24 @@ int Kerf::GetAddKerfGCode(GCodeStruct &pNoKerfG, GCodeStruct &AddKerfGCode, doub
 	return 0;
 }
 
-/*
+/*************************************************************************************************************
+函数功能: 判断两条G代码轨迹之间的位置关系
+参数:
+    pPreviousLine : 前一条G代码轨迹
+    pNextLine     : 下一条G代码轨迹
+    pAddLine      : 返回位置关系
+                    pAddLine->Name = M02 : 两条G代码轨迹之间需要截断
+                    pAddLine->Name = G01 : 两条G代码轨迹之间需要插入G01直线
+                    pAddLine->Name = G02 : 两条G代码轨迹之间需要插入G02圆弧
+                    pAddLine->Name = G03 : 两条G代码轨迹之间需要插入G03圆弧
+                    pAddLine->Name = M00 : 两条G代码轨迹之间平等相接，不需要截断或者插入
+    kerfvalue     : 割缝值大小
+    dir           : 割缝方向  G41:左割缝, G42:右割缝
+
+返回值:
+    无效
+
+note:
 	前一条线的末端切线角度 beta，后一条线的初端切线角度alpha
 	alpha-beta>0 左补偿为截取，右补偿为增加G03
 	alpha-beta<0 左补偿为增加G02，右补偿为截取
@@ -1131,13 +1575,14 @@ int Kerf::GetAddKerfGCode(GCodeStruct &pNoKerfG, GCodeStruct &AddKerfGCode, doub
 	pPreviousLine未补偿的前一句G 代码
 	pNextLine 未补偿的后一句G 代码
 	AddLine补偿的G代码, Name==G01(补偿的是小直线 ),G02(左补偿),G03(左补偿),M02(截取了，没有补偿)
-	
-*/
+*************************************************************************************************************/
 int Kerf::AddOrTrunc(GCodeStruct &pPreviousLine,GCodeStruct &pNextLine, GCodeStruct &pAddLine, int dir)
 {
 	double AngleChange=0;
 	//long InterTrunc;
-	
+
+  debug_stop (pNextLine);
+
 	AngleChange = GetTangent(pNextLine,0)-GetTangent(pPreviousLine,1);
 	
 	while(AngleChange>(PI))
@@ -1250,17 +1695,6 @@ int Kerf::Canclekerf(GCodeStruct &pGcode, double &dx, double &dy, double kerfvla
 void Kerf::g2kerf(std::vector<GCodeStruct> &DesKerFile,
                   std::vector<GCodeStruct> &NoKerfFile) {
 
-	enum kerfstatus
-	{
-		NOKERF,  //未建立 补偿
-		G41KERF,  //遇到G41，但补偿尚没有建立状态 
-		G42KERF,  //遇到G42,但补偿尚未建立状态
-		JUSTSETG41KERF,//刚刚建立 G41补偿
-		JUSTSETG42KERF,//刚刚建立 g42补偿
-		SETTEDG41KERF, //已经建立起G41补偿
-		SETTEDG42KERF, //已经建立起G42补偿
-		G40KERF  //撤消补偿状态
-	};
 	std::vector<GCodeStruct>::iterator GCodeArryPtrSrc = NoKerfFile.begin();
 	std::vector<GCodeStruct>::iterator GCodeArryPtrDes = DesKerFile.begin();
 	GCodeStruct GTemp1,GTemp2;
